@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Burlington Consult — Immigration Strategy & Advisory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+<style>
+/* ================================================================
+   DESIGN SYSTEM — TEAL/CYAN PALETTE
+   ================================================================ */
+:root {
+  --dark-base: #040A0F;
+  --dark-800: #0A1018;
+  --dark-700: #0F1A24;
+  --dark-600: #162230;
+
+  --white: #FFFFFF;
+  --off-white: #F7F7F5;
+  --warm-gray: #F0F0EC;
+  --light-gray: #F5F5F3;
+  --gray-100: #E8E7E3;
+  --gray-200: #D4D3CF;
+  --gray-300: #A8A7A3;
+  --gray-400: #78776F;
+  --gray-500: #545349;
+  --gray-700: #2D2C28;
+  --teal: #0D9488;
+  --teal-light: #14B8A6;
+  --teal-bright: #2DD4BF;
+  --cyan: #22D3EE;
+  --teal-glow: rgba(13,148,136,0.15);
+  --teal-soft: rgba(45,212,191,0.08);
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --section-pad: clamp(80px, 10vw, 140px);
+  --side-pad: clamp(24px, 5vw, 80px);
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  font-family: var(--sans);
+  color: var(--gray-700);
+  background: var(--off-white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  line-height: 1.6;
+}
+
+::selection { background: var(--teal); color: var(--white); }
+
+/* Noise */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ================================================================
+   NAV
+   ================================================================ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  padding: 0 var(--side-pad);
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.5s cubic-bezier(0.16,1,0.3,1);
+  border-bottom: 1px solid transparent;
+}
+
+nav.scrolled {
+  background: rgba(4,10,15,0.85);
+  backdrop-filter: blur(24px) saturate(180%);
+  border-bottom: 1px solid rgba(13,148,136,0.08);
+  box-shadow: 0 1px 40px rgba(0,0,0,0.2);
+}
+
+.nav-logo {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.nav-logo-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--teal-bright);
+  box-shadow: 0 0 12px rgba(45,212,191,0.5);
+  margin-left: 1px;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  list-style: none;
+}
+
+.nav-links a {
+  font-size: 0.84rem;
+  font-weight: 400;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  transition: color 0.3s;
+  position: relative;
+}
+
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px; left: 0;
+  width: 0; height: 1px;
+  background: var(--teal-bright);
+  transition: width 0.3s;
+}
+
+.nav-links a:hover { color: var(--white); }
+.nav-links a:hover::after { width: 100%; }
+
+.nav-cta {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--white) !important;
+  background: var(--teal);
+  padding: 10px 24px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.3s;
+  box-shadow: 0 0 20px rgba(13,148,136,0.25), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+
+.nav-cta::after { display: none !important; }
+.nav-cta:hover {
+  background: var(--teal-light);
+  box-shadow: 0 0 32px rgba(13,148,136,0.4);
+  transform: translateY(-1px);
+}
+
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px;
+}
+.nav-hamburger span {
+  display: block; width: 22px; height: 1.5px;
+  background: var(--white); border-radius: 1px;
+}
+
+/* ================================================================
+   HERO — TEAL/CYAN GRADIENT
+   ================================================================ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 130px var(--side-pad) 90px;
+  overflow: hidden;
+  /* The core gradient — deep dark with teal glow */
+  background:
+    radial-gradient(ellipse 80% 70% at 75% 60%, rgba(13,148,136,0.18) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 85% 80%, rgba(45,212,191,0.12) 0%, transparent 40%),
+    radial-gradient(ellipse 70% 60% at 30% 40%, rgba(6,78,100,0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 50% 50%, rgba(13,148,136,0.06) 0%, transparent 60%),
+    linear-gradient(135deg, #030810 0%, #061520 25%, #0A2030 45%, #0D3040 60%, #0A2535 75%, #050D15 100%);
+}
+
+/* Soft dot grid */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(45,212,191,0.18) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 45%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 45%, black 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Animated rings */
+.hero-rings {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-rings .ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(45,212,191,0.12);
+  top: 50%; left: 50%;
+}
+.hero-rings .ring:nth-child(1) { width: 400px; height: 400px; transform: translate(-50%,-50%); animation: ringFloat 10s ease-in-out infinite; }
+.hero-rings .ring:nth-child(2) { width: 650px; height: 650px; transform: translate(-50%,-50%); animation: ringFloat 10s ease-in-out infinite 1.5s; border-color: rgba(45,212,191,0.08); }
+.hero-rings .ring:nth-child(3) { width: 950px; height: 950px; transform: translate(-50%,-50%); animation: ringFloat 10s ease-in-out infinite 3s; border-color: rgba(45,212,191,0.05); }
+
+@keyframes ringFloat {
+  0%, 100% { opacity: 0.5; transform: translate(-50%,-50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%,-50%) scale(1.025); }
+}
+
+/* Scanline */
+.hero-scanline {
+  position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+}
+.hero-scanline::before {
+  content: '';
+  position: absolute; width: 200%; height: 1px; top: 0; left: -50%;
+  background: linear-gradient(90deg, transparent 0%, rgba(45,212,191,0.25) 40%, rgba(13,148,136,0.5) 50%, rgba(45,212,191,0.25) 60%, transparent 100%);
+  animation: scanDown 7s linear infinite;
+}
+@keyframes scanDown { 0% { top: -10%; } 100% { top: 110%; } }
+
+.hero-content {
+  position: relative; z-index: 2; max-width: 820px;
+  animation: heroFadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+}
+@keyframes heroFadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 22px;
+  border: 1px solid rgba(45,212,191,0.2);
+  border-radius: 100px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal-bright);
+  margin-bottom: 44px;
+  background: rgba(13,148,136,0.06);
+  backdrop-filter: blur(8px);
+  animation: heroFadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.05s both;
+}
+
+.hero-badge-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--teal-bright);
+  box-shadow: 0 0 8px rgba(45,212,191,0.6);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(45,212,191,0.4); }
+  50% { box-shadow: 0 0 16px rgba(45,212,191,0.8); }
+}
+
+.hero h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.6rem, 5.2vw, 4.2rem);
+  font-weight: 500;
+  line-height: 1.12;
+  color: var(--white);
+  letter-spacing: -0.025em;
+  margin-bottom: 28px;
+}
+
+.hero-highlight {
+  position: relative;
+  display: inline;
+  background: linear-gradient(135deg, var(--teal-bright) 0%, var(--cyan) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-highlight::after {
+  content: '';
+  position: absolute;
+  bottom: 2px; left: 0;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, var(--teal-bright), var(--cyan));
+  border-radius: 2px;
+  opacity: 0.4;
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: rgba(255,255,255,0.4);
+  max-width: 560px;
+  margin: 0 auto 52px;
+  font-weight: 300;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+  animation: heroFadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.5s both;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 15px 34px;
+  background: var(--teal);
+  color: var(--white);
+  font-family: var(--sans); font-size: 0.88rem; font-weight: 500;
+  border: none; border-radius: 10px; cursor: pointer;
+  text-decoration: none; letter-spacing: 0.01em;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 0 24px rgba(13,148,136,0.3), 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.1);
+}
+.btn-primary:hover {
+  background: var(--teal-light);
+  box-shadow: 0 0 40px rgba(13,148,136,0.45), 0 4px 16px rgba(13,148,136,0.2);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 15px 34px;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.65);
+  font-family: var(--sans); font-size: 0.88rem; font-weight: 400;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px; cursor: pointer; text-decoration: none;
+  transition: all 0.3s; backdrop-filter: blur(8px);
+}
+.btn-secondary:hover {
+  border-color: rgba(45,212,191,0.3);
+  color: var(--white);
+  background: rgba(13,148,136,0.06);
+}
+
+.btn-arrow { font-size: 1.1rem; transition: transform 0.25s; }
+.btn-primary:hover .btn-arrow,
+.btn-secondary:hover .btn-arrow { transform: translateX(3px); }
+
+/* Hero stats */
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin-top: 80px;
+  animation: heroFadeUp 1.2s cubic-bezier(0.16,1,0.3,1) 0.7s both;
+}
+.hero-stat { text-align: center; padding: 0 48px; position: relative; }
+.hero-stat + .hero-stat::before {
+  content: '';
+  position: absolute; left: 0; top: 4px; bottom: 4px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(13,148,136,0.2), transparent);
+}
+.hero-stat-value {
+  font-family: var(--serif);
+  font-size: 2rem; font-weight: 500;
+  background: linear-gradient(135deg, var(--white) 40%, var(--teal-bright));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; letter-spacing: -0.02em;
+}
+.hero-stat-label {
+  font-size: 0.73rem;
+  color: rgba(255,255,255,0.3);
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ================================================================
+   SECTION UTILITIES
+   ================================================================ */
+.section { padding: var(--section-pad) var(--side-pad); position: relative; }
+.section-white { background: var(--white); }
+.section-light { background: var(--light-gray); }
+.section-warm { background: var(--warm-gray); }
+.section-dark {
+  background: var(--dark-base);
+  color: var(--white);
+}
+
+.section-label {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--teal); margin-bottom: 20px;
+}
+.section-label::before {
+  content: ''; width: 20px; height: 1px; background: var(--teal);
+}
+
+.section-title {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3.5vw, 3rem);
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin-bottom: 20px;
+}
+
+.section-sub {
+  font-size: 1rem; line-height: 1.75;
+  color: var(--gray-400); max-width: 540px; font-weight: 300;
+}
+.section-dark .section-sub { color: rgba(255,255,255,0.38); }
+
+.container { max-width: 1200px; margin: 0 auto; }
+
+/* Divider */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent 5%, rgba(13,148,136,0.12) 30%, rgba(13,148,136,0.2) 50%, rgba(13,148,136,0.12) 70%, transparent 95%);
+}
+
+/* ================================================================
+   WHY NOW — WHITE section
+   ================================================================ */
+.why-now-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 64px;
+}
+
+.why-card {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 16px;
+  padding: 40px 32px 36px;
+  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  position: relative; overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.why-card::before {
+  content: '';
+  position: absolute; top: 0; left: 20%; right: 20%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--teal-bright), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.why-card:hover {
+  border-color: rgba(13,148,136,0.15);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.06), 0 0 30px rgba(13,148,136,0.04);
+}
+.why-card:hover::before { opacity: 1; }
+
+.why-card-icon {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  background: rgba(13,148,136,0.06);
+  border: 1px solid rgba(13,148,136,0.1);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+  color: var(--teal);
+  transition: all 0.3s;
+}
+.why-card:hover .why-card-icon {
+  background: rgba(13,148,136,0.1);
+  box-shadow: 0 0 20px rgba(13,148,136,0.1);
+}
+.why-card h3 {
+  font-family: var(--serif);
+  font-size: 1.25rem; font-weight: 500;
+  color: var(--gray-700);
+  margin-bottom: 14px;
+}
+.why-card p {
+  font-size: 0.88rem; line-height: 1.7;
+  color: var(--gray-400); font-weight: 300;
+}
+
+/* ================================================================
+   PATHWAYS — LIGHT GRAY section
+   ================================================================ */
+.pathways-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 64px;
+}
+
+.pathway-card {
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 20px;
+  padding: 52px 44px;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+.pathway-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--teal-bright), var(--cyan));
+  border-radius: 20px 20px 0 0;
+  opacity: 0; transition: opacity 0.4s;
+}
+.pathway-card:hover {
+  border-color: rgba(13,148,136,0.12);
+  box-shadow: 0 8px 40px rgba(13,148,136,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  transform: translateY(-4px);
+}
+.pathway-card:hover::before { opacity: 1; }
+
+.pathway-number {
+  font-family: var(--serif);
+  font-size: 3.5rem; font-weight: 400; line-height: 1;
+  margin-bottom: 28px; letter-spacing: -0.04em;
+  background: linear-gradient(135deg, var(--gray-200) 30%, var(--gray-100));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.pathway-card h3 { font-family: var(--serif); font-size: 1.5rem; font-weight: 500; margin-bottom: 8px; color: var(--gray-700); }
+.pathway-sub { font-size: 0.78rem; color: var(--teal); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 20px; }
+.pathway-card > p { font-size: 0.92rem; line-height: 1.75; color: var(--gray-400); font-weight: 300; margin-bottom: 32px; }
+
+.pathway-features { display: flex; flex-direction: column; gap: 14px; }
+
+/* Checkmark badges */
+.pathway-feature {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 0.85rem; color: var(--gray-500); font-weight: 400;
+}
+.pathway-check {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: rgba(13,148,136,0.08);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.pathway-check svg {
+  width: 13px; height: 13px;
+  stroke: var(--teal);
+  stroke-width: 2.5;
+  fill: none;
+}
+
+.pathway-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 36px; font-size: 0.85rem; font-weight: 500;
+  color: var(--teal); text-decoration: none;
+  transition: gap 0.3s, color 0.3s;
+}
+.pathway-link:hover { gap: 14px; color: var(--teal-light); }
+
+/* ================================================================
+   ABOUT — WHITE section
+   ================================================================ */
+.credentials-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: 80px; align-items: center;
+}
+.credential-image-wrap { position: relative; }
+.credential-image {
+  aspect-ratio: 4/3.5;
+  background: linear-gradient(145deg, var(--gray-100), var(--warm-gray));
+  border-radius: 20px; overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.06);
+}
+.img-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.78rem; color: var(--gray-300);
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+.credential-float-badge {
+  position: absolute; bottom: -20px; right: -16px;
+  background: var(--dark-base); color: var(--white);
+  padding: 16px 24px; border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid rgba(13,148,136,0.1);
+}
+.cfb-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: rgba(13,148,136,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--teal-bright);
+}
+.cfb-text { font-size: 0.78rem; color: rgba(255,255,255,0.5); line-height: 1.4; }
+.cfb-text strong { display: block; color: var(--white); font-weight: 600; font-size: 0.88rem; }
+
+.credential-content h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 2.8vw, 2.5rem);
+  font-weight: 500; letter-spacing: -0.025em;
+  line-height: 1.2; margin-bottom: 24px; color: var(--gray-700);
+}
+.credential-content p {
+  font-size: 0.95rem; line-height: 1.8;
+  color: var(--gray-400); font-weight: 300; margin-bottom: 16px;
+}
+
+.credential-stats {
+  display: flex; gap: 48px; margin-top: 44px;
+  padding-top: 32px; border-top: 1px solid var(--gray-100);
+}
+.cred-stat-value { font-family: var(--serif); font-size: 2rem; font-weight: 500; color: var(--gray-700); }
+.cred-stat-label { font-size: 0.72rem; color: var(--gray-300); margin-top: 4px; letter-spacing: 0.05em; text-transform: uppercase; }
+
+/* ================================================================
+   TESTIMONIALS — LIGHT GRAY
+   ================================================================ */
+.testimonials-header { margin-bottom: 64px; }
+.testimonials-track-wrapper {
+  overflow: hidden;
+  margin: 0 calc(-1 * var(--side-pad));
+  padding: 0 var(--side-pad);
+}
+.testimonials-track {
+  display: flex; gap: 20px;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  -ms-overflow-style: none; scrollbar-width: none;
+  padding-bottom: 12px;
+}
+.testimonials-track::-webkit-scrollbar { display: none; }
+
+.testimonial-card {
+  flex: 0 0 380px; scroll-snap-align: start;
+  background: var(--white);
+  border: 1px solid rgba(0,0,0,0.05);
+  border-radius: 20px; padding: 40px 32px;
+  display: flex; flex-direction: column;
+  justify-content: space-between; min-height: 340px;
+  transition: all 0.4s cubic-bezier(0.16,1,0.3,1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.testimonial-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.06);
+  border-color: rgba(13,148,136,0.1);
+}
+
+.testimonial-quote-mark {
+  font-family: var(--serif); font-size: 3rem; line-height: 1;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--teal-bright), var(--cyan));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.testimonial-text {
+  font-size: 0.92rem; line-height: 1.75;
+  color: var(--gray-400); font-weight: 300; font-style: italic; flex: 1;
+}
+.testimonial-author {
+  display: flex; align-items: center; gap: 14px;
+  margin-top: 28px; padding-top: 20px;
+  border-top: 1px solid var(--gray-100);
+}
+.testimonial-avatar {
+  width: 40px; height: 40px; border-radius: 10px;
+  background: linear-gradient(135deg, var(--teal-bright), var(--cyan));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 600; color: var(--white);
+}
+.testimonial-name { font-size: 0.88rem; font-weight: 500; color: var(--gray-700); }
+.testimonial-role { font-size: 0.76rem; color: var(--gray-300); margin-top: 2px; }
+
+/* ================================================================
+   AT A GLANCE — WHITE
+   ================================================================ */
+.glance-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  margin-top: 64px;
+}
+
+.glance-item {
+  background: var(--light-gray);
+  border: 1px solid var(--gray-100);
+  border-radius: 16px;
+  padding: 44px 24px;
+  text-align: center;
+  transition: all 0.3s;
+}
+.glance-item:hover {
+  border-color: rgba(13,148,136,0.12);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.04);
+  transform: translateY(-2px);
+}
+
+.glance-value {
+  font-family: var(--serif);
+  font-size: 2.4rem; font-weight: 500;
+  color: var(--gray-700); letter-spacing: -0.02em; margin-bottom: 8px;
+}
+.glance-label {
+  font-size: 0.76rem; color: var(--gray-400);
+  letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.5;
+}
+.glance-label small {
+  display: block; font-size: 0.65rem;
+  color: var(--gray-300); margin-top: 4px;
+}
+
+/* ================================================================
+   CTA — DARK with teal gradient
+   ================================================================ */
+.cta-section {
+  position: relative; text-align: center; overflow: hidden;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 60%, rgba(13,148,136,0.08) 0%, transparent 55%),
+    var(--dark-base);
+}
+.cta-bg-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: radial-gradient(rgba(45,212,191,0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse 40% 35% at 50% 50%, black 0%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse 40% 35% at 50% 50%, black 0%, transparent 70%);
+}
+.cta-content { position: relative; z-index: 2; }
+.cta-section h2 {
+  font-family: var(--serif);
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 500; color: var(--white);
+  letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 24px;
+}
+.cta-section p {
+  font-size: 1rem; color: rgba(255,255,255,0.38);
+  font-weight: 300; max-width: 480px;
+  margin: 0 auto 44px; line-height: 1.8;
+}
+.cta-contact-row {
+  display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; margin-top: 8px;
+}
+.cta-contact-item {
+  font-size: 0.82rem; color: rgba(255,255,255,0.28);
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ================================================================
+   VISA PATHWAYS STRIP
+   ================================================================ */
+.visa-strip {
+  background: var(--dark-base);
+  border-top: 1px solid rgba(45,212,191,0.08);
+  border-bottom: 1px solid rgba(45,212,191,0.08);
+  padding: 0 var(--side-pad);
+}
+
+.visa-strip-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.visa-card {
+  padding: 48px 36px;
+  border-right: 1px solid rgba(45,212,191,0.08);
+  transition: background 0.3s;
+}
+
+.visa-card:last-child {
+  border-right: none;
+}
+
+.visa-card:hover {
+  background: rgba(45,212,191,0.03);
+}
+
+.visa-card-tag {
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 16px;
+}
+
+.visa-card-title {
+  font-family: var(--serif);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: -0.01em;
+  margin-bottom: 14px;
+}
+
+.visa-card-desc {
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: rgba(255,255,255,0.35);
+  font-weight: 300;
+}
+
+@media (max-width: 1024px) {
+  .visa-strip-inner { grid-template-columns: repeat(2, 1fr); }
+  .visa-card:nth-child(2) { border-right: none; }
+  .visa-card:nth-child(-n+2) { border-bottom: 1px solid rgba(45,212,191,0.08); }
+}
+
+@media (max-width: 768px) {
+  .visa-strip-inner { grid-template-columns: 1fr; }
+  .visa-card { border-right: none; border-bottom: 1px solid rgba(45,212,191,0.08); padding: 32px 24px; }
+  .visa-card:last-child { border-bottom: none; }
+}
+
+/* ================================================================
+   FOOTER — DARK
+   ================================================================ */
+footer {
+  background: var(--dark-base);
+  border-top: 1px solid rgba(13,148,136,0.06);
+  padding: 72px var(--side-pad) 40px;
+}
+.footer-grid {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px;
+}
+.footer-brand {
+  font-family: var(--serif); font-size: 1.2rem; font-weight: 600;
+  color: var(--white); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 3px;
+}
+.footer-brand-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--teal-bright); }
+.footer-desc { font-size: 0.85rem; color: rgba(255,255,255,0.3); line-height: 1.7; font-weight: 300; max-width: 300px; }
+.footer-col h4 { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.2); margin-bottom: 24px; }
+.footer-col a { display: block; font-size: 0.85rem; color: rgba(255,255,255,0.45); text-decoration: none; margin-bottom: 14px; transition: color 0.3s; }
+.footer-col a:hover { color: var(--white); }
+.footer-bottom {
+  max-width: 1200px; margin: 52px auto 0;
+  padding-top: 32px; border-top: 1px solid rgba(255,255,255,0.04);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.footer-copy { font-size: 0.76rem; color: rgba(255,255,255,0.2); }
+.footer-legal { display: flex; gap: 24px; }
+.footer-legal a { font-size: 0.76rem; color: rgba(255,255,255,0.2); text-decoration: none; transition: color 0.3s; }
+.footer-legal a:hover { color: rgba(255,255,255,0.45); }
+
+/* ================================================================
+   ANIMATIONS
+   ================================================================ */
+/* Ensure visibility even without JS */
+.animate-on-scroll {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* JS adds this class to enable scroll animations */
+.js-ready .animate-on-scroll {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.9s cubic-bezier(0.16,1,0.3,1), transform 0.9s cubic-bezier(0.16,1,0.3,1);
+}
+.js-ready .animate-on-scroll.visible { opacity: 1; transform: translateY(0); }
+.stagger-1 { transition-delay: 0.08s; }
+.stagger-2 { transition-delay: 0.16s; }
+.stagger-3 { transition-delay: 0.24s; }
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 1024px) {
+  .why-now-grid { grid-template-columns: repeat(2, 1fr); }
+  .glance-grid { grid-template-columns: repeat(2, 1fr); }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .credentials-wrapper { gap: 48px; }
+}
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex; }
+  .hero { min-height: auto; padding: 140px 24px 80px; }
+  .hero-stats { flex-direction: column; gap: 28px; }
+  .hero-stat { padding: 0; }
+  .hero-stat + .hero-stat::before { display: none; }
+  .section { padding: 80px 24px; }
+  .why-now-grid { grid-template-columns: 1fr; }
+  .pathways-grid { grid-template-columns: 1fr; }
+  .credentials-wrapper { grid-template-columns: 1fr; gap: 40px; }
+  .credential-float-badge { position: relative; bottom: auto; right: auto; margin-top: 16px; display: inline-flex; }
+  .glance-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; gap: 16px; text-align: center; }
+  .testimonial-card { flex: 0 0 310px; }
+}
+
+@media (max-width: 480px) {
+  .hero h1 { font-size: 2.1rem; }
+  .hero-buttons { flex-direction: column; align-items: center; }
+  .glance-grid { grid-template-columns: 1fr; }
+  .credential-stats { flex-direction: column; gap: 24px; }
+  .pathway-card { padding: 36px 28px; }
+}
+
+/* Mobile nav */
+.mobile-nav {
+  display: none; position: fixed; inset: 0;
+  background: rgba(4,10,15,0.97);
+  backdrop-filter: blur(20px);
+  z-index: 999;
+  flex-direction: column; align-items: center; justify-content: center; gap: 36px;
+}
+.mobile-nav.open { display: flex; }
+.mobile-nav a {
+  font-family: var(--serif); font-size: 1.8rem; font-weight: 400;
+  color: rgba(255,255,255,0.7); text-decoration: none; transition: color 0.3s;
+}
+.mobile-nav a:hover { color: var(--white); }
+.mobile-nav-close {
+  position: absolute; top: 24px; right: 24px;
+  background: none; border: none; color: var(--white);
+  font-size: 1.5rem; cursor: pointer;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <a href="index.html" class="nav-logo">Burlington<span class="nav-logo-dot"></span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="about.html" onclick="this.parentElement.classList.remove('open')">About</a>
+  <a href="faq.html" onclick="this.parentElement.classList.remove('open')">FAQs</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="book.html" class="nav-cta">Book a Consultation</a></li>
+  </ul>
+  <button class="nav-hamburger" onclick="document.getElementById('mobileNav').classList.add('open')">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-close" onclick="this.parentElement.classList.remove('open')">&times;</button>
+  <a href="index.html" onclick="this.parentElement.classList.remove('open')">Home</a>
+  <a href="about.html" onclick="this.parentElement.classList.remove('open')">About</a>
+  <a href="faq.html" onclick="this.parentElement.classList.remove('open')">FAQs</a>
+  <a href="contact.html" onclick="this.parentElement.classList.remove('open')">Contact</a>
+  <a href="book.html" onclick="this.parentElement.classList.remove('open')">Book a Consultation</a>
+</div>
+
+<!-- HERO — DARK TEAL GRADIENT -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-rings"><div class="ring"></div><div class="ring"></div><div class="ring"></div></div>
+  <div class="hero-scanline"></div>
+  <div class="hero-content">
+    <div class="hero-badge"><span class="hero-badge-dot"></span> Immigration Strategy &amp; Advisory</div>
+    <h1>The fastest path to a <span class="hero-highlight">U.S. green card</span> for exceptional professionals.</h1>
+    <p class="hero-sub">Burlington Consult develops and files EB-1A and EB-2 NIW petitions for high-achieving professionals across law, STEM, finance, the arts, and public policy — enabling permanent U.S. residency without an employer sponsor, in the fastest way possible.</p>
+    <div class="hero-buttons">
+      <a href="book.html" class="btn-primary">Book a Consultation <span class="btn-arrow">&rarr;</span></a>
+      <a href="#pathways" class="btn-secondary">Explore Pathways <span class="btn-arrow">&rarr;</span></a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-value">99%</div><div class="hero-stat-label">EB-1A approval rate for Nigerians</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">&lt;5%</div><div class="hero-stat-label">Of green cards carry EB-1A status</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">15 Days</div><div class="hero-stat-label">Premium processing decision</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY NOW — WHITE -->
+<section class="section section-white" id="why-now">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <div class="section-label">Time-Sensitive</div>
+      <h2 class="section-title">The window is narrowing.</h2>
+      <p class="section-sub">Every month of delay in filing is a month later in the queue, assessed against a bar that is likely to become stricter.</p>
+    </div>
+    <div class="why-now-grid">
+      <div class="why-card animate-on-scroll stagger-1">
+        <div class="why-card-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 6v6l4 2M22 12A10 10 0 1 1 2 12a10 10 0 0 1 20 0Z"/></svg></div>
+        <h3>Regulatory Change Pending</h3>
+        <p>DHS has proposed raising evidentiary thresholds for EB-1A and NIW. Petitions filed now are assessed against current, more favourable standards.</p>
+      </div>
+      <div class="why-card animate-on-scroll stagger-2">
+        <div class="why-card-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a10 10 0 11-20 0 10 10 0 0120 0z"/></svg></div>
+        <h3>Priority Date Is Set on Filing</h3>
+        <p>Your queue position is established the day USCIS receives your petition. Every month of delay is a month later in line.</p>
+      </div>
+      <div class="why-card animate-on-scroll stagger-3">
+        <div class="why-card-icon"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div>
+        <h3>Processing Is Active</h3>
+        <p>USCIS continues to accept and substantively process I-140 filings. RFEs are being issued, confirming active case engagement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PATHWAYS — LIGHT GRAY -->
+<section class="section section-light" id="pathways">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <div class="section-label">Immigration Pathways</div>
+      <h2 class="section-title">Two pathways. One strategy.</h2>
+      <p class="section-sub">Burlington Consult files both petitions simultaneously — preserving a single priority date and creating strategic redundancy.</p>
+    </div>
+    <div class="pathways-grid">
+      <div class="pathway-card animate-on-scroll stagger-1">
+        <div class="pathway-number">01</div>
+        <h3>EB-1A Extraordinary Ability</h3>
+        <div class="pathway-sub">The Einstein Visa</div>
+        <p>The most distinguished employment-based visa the U.S. issues. Same statutory classification as Nobel laureates, Pulitzer recipients, Grammy winners, and Olympic champions. Fewer than 5% of employment-based green cards carry this classification annually.</p>
+        <div class="pathway-features">
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>No employer sponsor or job offer required</div>
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>No U.S. labour market test</div>
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Self-petitioned from anywhere in the world</div>
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Full portability from the moment of approval</div>
+        </div>
+        <a href="#" class="pathway-link">Learn more &rarr;</a>
+      </div>
+      <div class="pathway-card animate-on-scroll stagger-2">
+        <div class="pathway-number">02</div>
+        <h3>EB-2 National Interest Waiver</h3>
+        <div class="pathway-sub">The NIW Pathway</div>
+        <p>The parallel self-petitioned pathway for professionals whose proposed work serves a demonstrable U.S. national interest. Requires satisfaction of the Dhanasar three-prong test — substantial merit, strong positioning, and net benefit to the U.S.</p>
+        <div class="pathway-features">
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Self-petitioned — no PERM or employer required</div>
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Filed simultaneously with EB-1A</div>
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Single evidence record across both petitions</div>
+          <div class="pathway-feature"><div class="pathway-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>Shared priority date — strategic redundancy</div>
+        </div>
+        <a href="#" class="pathway-link">Learn more &rarr;</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ABOUT — WHITE -->
+<section class="section section-white" id="about">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <div class="section-label">About Burlington Consult</div>
+      <h2 class="section-title">Built by someone who filed it themselves.</h2>
+      <p class="section-sub" style="max-width: 720px;">Led by a Harvard Law School-trained strategist (LL.M., Technology Law and AI Policy, Class of 2026) who is a self-petitioned, first-submission EB-1A holder. Not theory — direct practitioner knowledge of the Kazarian two-step framework, Dhanasar precedent, and current USCIS adjudication standards.</p>
+      <p style="font-size: 0.95rem; line-height: 1.8; color: var(--gray-400); font-weight: 300; max-width: 720px; margin-top: 16px;">Supported by an experienced team of case architects, AI prompt engineers, researchers, and senior advisers spanning the United States, Nigeria, and Canada. Incorporated in the State of Delaware, March 2026, with active client engagements across West Africa, the United Kingdom, and Canada.</p>
+    </div>
+    <div class="credential-stats animate-on-scroll" style="margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--gray-100); display: flex; gap: 48px;">
+      <div><div class="cred-stat-value">From $12k</div><div class="cred-stat-label">Advisory Fee — flexible arrangements available</div></div>
+      <div><div class="cred-stat-value">$250</div><div class="cred-stat-label">Initial Consultation (credited if you proceed)</div></div>
+      <div><div class="cred-stat-value">12</div><div class="cred-stat-label">Letters of Support</div></div>
+      <div><div class="cred-stat-value">12 Mo.</div><div class="cred-stat-label">RFE &amp; NOID Support Included</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- OUR APPROACH — LIGHT GRAY -->
+<section class="section section-light" id="approach">
+  <div class="container">
+    <div class="animate-on-scroll">
+      <div class="section-label">Our Approach</div>
+      <h2 class="section-title">The field of endeavour is everything.</h2>
+      <p class="section-sub" style="max-width: 680px;">The most consequential decision in any EB-1A or NIW petition is the field of endeavour — the specific articulation of what you propose to pursue in the United States and why that work constitutes a national interest. Errors at this stage are not correctable by adding stronger evidence later.</p>
+      <p style="font-size: 0.95rem; line-height: 1.8; color: var(--gray-400); font-weight: 300; max-width: 680px; margin-top: 16px;">Burlington Consult begins each engagement by analysing your full professional record, identifying the strongest available field of endeavour, testing it against all three Dhanasar prongs, and confirming that it aligns with the documented evidence base. No drafting begins until that framework is established and stress-tested.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS — LIGHT GRAY -->
+<section class="section section-light" id="testimonials">
+  <div class="container">
+    <div class="testimonials-header animate-on-scroll">
+      <div class="section-label">Testimonials</div>
+      <h2 class="section-title">Don't take our word for it.</h2>
+      <p class="section-sub">Hear from professionals who trusted Burlington Consult with their immigration strategy.</p>
+    </div>
+    <div class="testimonials-track-wrapper">
+      <div class="testimonials-track">
+        <div class="testimonial-card">
+          <div><div class="testimonial-quote-mark">&ldquo;</div><p class="testimonial-text">The level of strategic thinking was unlike anything I'd encountered with previous consultants. They built an entire evidentiary architecture around my career that made the case undeniable.</p></div>
+          <div class="testimonial-author"><div class="testimonial-avatar">AO</div><div><div class="testimonial-name">A. Okonkwo</div><div class="testimonial-role">Senior Technology Executive</div></div></div>
+        </div>
+        <div class="testimonial-card">
+          <div><div class="testimonial-quote-mark">&ldquo;</div><p class="testimonial-text">Burlington Consult mapped my entire professional record to the EB-1A criteria in a way I hadn't considered. The field of endeavour they constructed was the backbone of the entire petition. Approved on first submission.</p></div>
+          <div class="testimonial-author"><div class="testimonial-avatar">DA</div><div><div class="testimonial-name">D. Adeyemi</div><div class="testimonial-role">Medical Researcher</div></div></div>
+        </div>
+        <div class="testimonial-card">
+          <div><div class="testimonial-quote-mark">&ldquo;</div><p class="testimonial-text">What stood out was how they handled the recommendation letters. Each one was meticulously tailored to address specific USCIS criteria. It was clear they understood the adjudicator's perspective.</p></div>
+          <div class="testimonial-author"><div class="testimonial-avatar">FN</div><div><div class="testimonial-name">F. Nwachukwu</div><div class="testimonial-role">Finance Director</div></div></div>
+        </div>
+        <div class="testimonial-card">
+          <div><div class="testimonial-quote-mark">&ldquo;</div><p class="testimonial-text">The consultation alone was worth it. Within thirty minutes, I had clarity on my strongest pathway and a realistic assessment of what evidence I still needed. No fluff, no upselling — just straight strategic advice.</p></div>
+          <div class="testimonial-author"><div class="testimonial-avatar">TB</div><div><div class="testimonial-name">T. Balogun</div><div class="testimonial-role">Policy Adviser</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AT A GLANCE — WHITE -->
+<section class="section section-white" id="glance">
+  <div class="container">
+    <div class="animate-on-scroll" style="text-align: center; margin-bottom: 16px;">
+      <div class="section-label" style="justify-content: center;">At a Glance</div>
+      <h2 class="section-title">The engagement, in numbers.</h2>
+    </div>
+    <div class="glance-grid animate-on-scroll">
+      <div class="glance-item"><div class="glance-value">From $12k</div><div class="glance-label">Advisory Fee<small>Flexible — phased &amp; deferred options</small></div></div>
+      <div class="glance-item"><div class="glance-value">15</div><div class="glance-label">Business Days<small>Premium processing decision</small></div></div>
+      <div class="glance-item"><div class="glance-value">12</div><div class="glance-label">Months<small>RFE &amp; NOID support included</small></div></div>
+      <div class="glance-item"><div class="glance-value">2</div><div class="glance-label">Petitions Filed<small>EB-1A + NIW simultaneously</small></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- VISA PATHWAYS STRIP -->
+<section class="visa-strip">
+  <div class="visa-strip-inner">
+    <div class="visa-card">
+      <div class="visa-card-tag">Primary</div>
+      <h3 class="visa-card-title">EB-1A</h3>
+      <p class="visa-card-desc">For professionals with sustained national or international acclaim. No employer sponsor. The highest employment-based classification USCIS issues.</p>
+    </div>
+    <div class="visa-card">
+      <div class="visa-card-tag">Primary</div>
+      <h3 class="visa-card-title">EB-2 NIW</h3>
+      <p class="visa-card-desc">For advanced-degree holders whose proposed work serves a demonstrable U.S. national interest. Self-petitioned under the Dhanasar framework.</p>
+    </div>
+    <div class="visa-card">
+      <div class="visa-card-tag">Advisory</div>
+      <h3 class="visa-card-title">O-1A</h3>
+      <p class="visa-card-desc">For individuals with extraordinary ability in sciences, business, or technology. Non-immigrant classification with no annual cap.</p>
+    </div>
+    <div class="visa-card">
+      <div class="visa-card-tag">Advisory</div>
+      <h3 class="visa-card-title">TN</h3>
+      <p class="visa-card-desc">For Canadian and Mexican professionals in USMCA-designated occupations. Streamlined entry with no annual numerical limit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA — DARK -->
+<section class="section section-dark cta-section" id="contact" style="padding-top: 100px; padding-bottom: 130px;">
+  <div class="cta-bg-grid"></div>
+  <div class="cta-content container">
+    <div class="animate-on-scroll">
+      <div class="section-label" style="justify-content: center;">Get Started</div>
+      <h2>Not ready to commit?<br>Start with a <span class="hero-highlight">consultation</span>.</h2>
+      <p>A focused 30-minute session covering your profile, the strongest available pathway, and a direct assessment of eligibility. The $250 fee is credited in full if you proceed within 30 days.</p>
+      <div style="margin-bottom: 48px;">
+        <a href="book.html" class="btn-primary" style="font-size: 0.92rem; padding: 17px 44px;">Book a Consultation — $250 <span class="btn-arrow">&rarr;</span></a>
+      </div>
+      <div class="cta-contact-row">
+        <span class="cta-contact-item"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="eb9f8e939f848c89848f84ab8c868a8287c5888486">[email&#160;protected]</a></span>
+        <span class="cta-contact-item"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> +1 (857) 242-9842</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER — DARK -->
+<footer>
+  <div class="footer-grid">
+    <div><div class="footer-brand">Burlington<span class="footer-brand-dot"></span></div><p class="footer-desc">Immigration strategy and advisory for high-achieving professionals. EB-1A and EB-2 NIW petitions developed and filed to USCIS.</p></div>
+    <div class="footer-col"><h4>Pathways</h4><a href="#">EB-1A Extraordinary Ability</a><a href="#">EB-2 National Interest Waiver</a><a href="#">Dual Petition Strategy</a></div>
+    <div class="footer-col"><h4>Firm</h4><a href="index.html">Home</a><a href="about.html" onclick="this.parentElement.classList.remove('open')">About</a>
+  <a href="faq.html" onclick="this.parentElement.classList.remove('open')">FAQs</a><a href="contact.html">Contact</a><a href="book.html">Book a Consultation</a></div>
+    <div class="footer-col"><h4>Contact</h4><a href="/cdn-cgi/l/email-protection#3541504d415a52575a515a755258545c591b565a58"><span class="__cf_email__" data-cfemail="71051409051e16131e151e31161c10181d5f121e1c">[email&#160;protected]</span></a><a href="tel:+18572429842">+1 (857) 242-9842</a><a href="#">LinkedIn</a></div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">&copy; 2026 Burlington Consult. All rights reserved.</div>
+    <div class="footer-legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Disclaimer</a></div>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// Enable scroll animations only when JS is available
+document.body.classList.add('js-ready');
+
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 40); });
+
+const observer = new Intersect

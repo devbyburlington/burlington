@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAQs — Burlington Consult</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --dark-base: #040A0F; --white: #FFFFFF; --off-white: #F7F7F5; --light-gray: #F5F5F3;
+  --gray-100: #E8E7E3; --gray-200: #D4D3CF; --gray-300: #A8A7A3; --gray-400: #78776F; --gray-500: #545349; --gray-700: #2D2C28;
+  --teal: #0D9488; --teal-light: #14B8A6; --teal-bright: #2DD4BF;
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --side-pad: clamp(24px, 5vw, 80px);
+}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body { font-family: var(--sans); color: var(--gray-700); background: var(--off-white); -webkit-font-smoothing: antialiased; overflow-x: hidden; line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
+::selection { background: var(--teal); color: var(--white); }
+body::after { content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 9999; opacity: 0.015; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 200px 200px; }
+
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 0 var(--side-pad); height: 72px; display: flex; align-items: center; justify-content: space-between; background: rgba(4,10,15,0.85); backdrop-filter: blur(24px) saturate(180%); border-bottom: 1px solid rgba(13,148,136,0.08); box-shadow: 0 1px 40px rgba(0,0,0,0.2); }
+.nav-logo { font-family: var(--serif); font-size: 1.3rem; font-weight: 600; color: var(--white); text-decoration: none; display: flex; align-items: center; gap: 3px; }
+.nav-logo-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--teal-bright); box-shadow: 0 0 12px rgba(45,212,191,0.5); margin-left: 1px; }
+.nav-links { display: flex; align-items: center; gap: 36px; list-style: none; }
+.nav-links a { font-size: 0.84rem; font-weight: 400; color: rgba(255,255,255,0.5); text-decoration: none; transition: color 0.3s; }
+.nav-links a:hover { color: var(--white); }
+.nav-cta { font-size: 0.82rem; font-weight: 500; color: var(--white) !important; background: var(--teal); padding: 10px 24px; border-radius: 8px; text-decoration: none; box-shadow: 0 0 20px rgba(13,148,136,0.25); transition: all 0.3s; }
+.nav-cta:hover { background: var(--teal-light); transform: translateY(-1px); }
+.nav-hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; background: none; border: none; padding: 4px; }
+.nav-hamburger span { display: block; width: 22px; height: 1.5px; background: var(--white); }
+
+.faq-page { flex: 1; padding: 130px var(--side-pad) 80px; }
+.faq-container { max-width: 760px; margin: 0 auto; }
+.faq-header { margin-bottom: 64px; }
+.faq-breadcrumb { font-size: 0.78rem; color: var(--gray-300); margin-bottom: 32px; }
+.faq-breadcrumb a { color: var(--gray-400); text-decoration: none; transition: color 0.3s; }
+.faq-breadcrumb a:hover { color: var(--teal); }
+.faq-header h1 { font-family: var(--serif); font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 500; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 16px; }
+.faq-header p { font-size: 1rem; line-height: 1.75; color: var(--gray-400); font-weight: 300; max-width: 520px; }
+
+.faq-item { border-bottom: 1px solid var(--gray-100); }
+.faq-question {
+  width: 100%; padding: 24px 0; background: none; border: none;
+  font-family: var(--sans); font-size: 0.95rem; font-weight: 500;
+  color: var(--gray-700); text-align: left; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
+  transition: color 0.3s;
+}
+.faq-question:hover { color: var(--teal); }
+.faq-icon {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: rgba(13,148,136,0.06); border: 1px solid rgba(13,148,136,0.1);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.3s; color: var(--teal);
+}
+.faq-item.open .faq-icon { background: var(--teal); color: var(--white); transform: rotate(45deg); }
+.faq-answer {
+  max-height: 0; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.16,1,0.3,1), padding 0.3s;
+  padding: 0 0 0 0;
+}
+.faq-item.open .faq-answer { max-height: 500px; padding: 0 0 24px 0; }
+.faq-answer p { font-size: 0.9rem; line-height: 1.8; color: var(--gray-400); font-weight: 300; }
+
+.faq-cta-box {
+  margin-top: 64px; background: var(--white); border: 1px solid var(--gray-100);
+  border-radius: 20px; padding: 44px 40px; text-align: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+.faq-cta-box h3 { font-family: var(--serif); font-size: 1.4rem; font-weight: 500; margin-bottom: 12px; }
+.faq-cta-box p { font-size: 0.92rem; color: var(--gray-400); font-weight: 300; margin-bottom: 28px; max-width: 400px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+.faq-cta-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 32px; background: var(--teal); color: var(--white);
+  font-family: var(--sans); font-size: 0.88rem; font-weight: 500;
+  border: none; border-radius: 10px; cursor: pointer; text-decoration: none;
+  box-shadow: 0 0 24px rgba(13,148,136,0.25); transition: all 0.3s;
+}
+.faq-cta-btn:hover { background: var(--teal-light); transform: translateY(-2px); box-shadow: 0 0 40px rgba(13,148,136,0.4); }
+
+footer { background: var(--dark-base); border-top: 1px solid rgba(13,148,136,0.06); padding: 48px var(--side-pad) 32px; margin-top: auto; }
+.footer-inner { max-width: 760px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+.footer-copy { font-size: 0.76rem; color: rgba(255,255,255,0.2); }
+.footer-legal { display: flex; gap: 24px; }
+.footer-legal a { font-size: 0.76rem; color: rgba(255,255,255,0.2); text-decoration: none; transition: color 0.3s; }
+.footer-legal a:hover { color: rgba(255,255,255,0.45); }
+
+.mobile-nav { display: none; position: fixed; inset: 0; background: rgba(4,10,15,0.97); backdrop-filter: blur(20px); z-index: 999; flex-direction: column; align-items: center; justify-content: center; gap: 36px; }
+.mobile-nav.open { display: flex; }
+.mobile-nav a { font-family: var(--serif); font-size: 1.8rem; color: rgba(255,255,255,0.7); text-decoration: none; }
+.mobile-nav-close { position: absolute; top: 24px; right: 24px; background: none; border: none; color: var(--white); font-size: 1.5rem; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; }
+
+@media (max-width: 768px) {
+  .nav-links { display: none; }
+  .nav-hamburger { display: flex; }
+  .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">Burlington<span class="nav-logo-dot"></span></a>
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="about.html" onclick="this.parentElement.classList.remove('open')">About</a>
+  <a href="faq.html" onclick="this.parentElement.classList.remove('open')">FAQs</a></li>
+    <li><a href="contact.html">Contact</a></li>
+    <li><a href="book.html" class="nav-cta">Book a Consultation</a></li>
+  </ul>
+  <button class="nav-hamburger" onclick="document.getElementById('mobileNav').classList.add('open')"><span></span><span></span><span></span></button>
+</nav>
+<div class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-close" onclick="this.parentElement.classList.remove('open')">&times;</button>
+  <a href="index.html">Home</a><a href="about.html" onclick="this.parentElement.classList.remove('open')">About</a>
+  <a href="faq.html" onclick="this.parentElement.classList.remove('open')">FAQs</a><a href="contact.html">Contact</a><a href="book.html">Book a Consultation</a>
+</div>
+
+<main class="faq-page">
+  <div class="faq-container">
+    <div class="faq-header">
+      <div class="faq-breadcrumb"><a href="index.html">Home</a> &nbsp;/&nbsp; FAQs</div>
+      <h1>Frequently asked questions.</h1>
+      <p>Common questions on EB-1A, EB-2 NIW, and working with Burlington Consult.</p>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">I am a Nigerian national. Does the 2025–2026 travel restriction affect my ability to file?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>The I-140 petition and the entry restriction are separate legal instruments. Presidential Proclamation 10998 imposed a partial entry suspension on Nigerian nationals but explicitly preserved case-by-case waivers for individuals whose entry serves U.S. national interests. An I-140 can be filed regardless. A strong EB-1A or NIW approval is itself the most direct evidence for the national interest exception. The correct position: file now, secure the approval, establish the priority date, and hold a confirmed national interest finding when the restriction is lifted.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">I hold dual citizenship (British and Nigerian). Which is relevant to the petition?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>Neither. The EB-1A and EB-2 NIW are merit-based pathways. Eligibility is based entirely on professional record, not nationality or passport. The I-140 is a classification petition, not a visa application. Burlington Consult regularly advises clients with British, Canadian, Irish, and EU citizenships seeking U.S. permanent residency as a career and compensation instrument. Entry restrictions on one passport do not affect your I-140 filing, processing, or approval.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">USCIS placed a hold on final adjudication. Will my case proceed?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>USCIS Policy Memorandum PM-602-0194 placed a hold on final adjudication for nationals of travel restriction countries. Processing continues up to the point of final adjudication and RFEs are being actively issued. Legal challenges are proceeding in federal court. The priority date is established on the day USCIS receives the I-140, not on the date of final approval. Every month of delay in filing is a month added to the back of the queue.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">I am not Nigerian — I am Ghanaian / Kenyan / South African. Does Burlington Consult work with other African professionals?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>Yes. Burlington Consult works with senior professionals across the African continent. The firm's credential translation methodology, salary benchmark framework, and media network have been developed with the broader African professional context in mind. The general principles — file now, establish the priority date, build the strongest possible I-140 record — apply regardless of country of origin.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Is USCIS accepting new EB-1A and EB-2 NIW filings?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>Yes. USCIS continues to accept new I-140 filings for both classifications. The hold applies only to final decisions, not to receipt, docketing, substantive processing, or RFE issuance. Standard processing is currently 20 to 22 months. Every month of delay extends the timeline by the same period.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Will the proposed regulatory changes make it harder to qualify?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>The proposed rule (RIN 1615-AC85) is not yet operative. If finalised, it would raise evidentiary thresholds and require more detailed documentation of real-world impact. Petitions filed now are assessed against current standards. Filing before the proposed rules are finalised means the petition is submitted and receipted under the current, more favourable framework.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">What is the difference between EB-1A and EB-2 NIW, and why file both?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>The EB-1A requires sustained national or international acclaim through at least three of ten criteria, followed by a final merits determination. The EB-2 NIW requires an advanced degree or exceptional ability plus the Dhanasar three-prong test. Filing both simultaneously establishes the priority date across both pathways, creates strategic redundancy, and allows a single evidence record to support both petitions.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">I already have a second citizenship or passport. Why do I need a U.S. green card?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>A U.S. green card is permanent work authorisation, not a travel document. For professionals in financial services, law, technology, and consulting, the value is primarily access to U.S. market rates. A senior professional in Lagos, London, or Nairobi with a green card can engage directly with U.S. clients and bill at U.S. rates — permanently. A CBI passport provides travel advantages; it does not provide U.S. work authorisation.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">What does Burlington Consult provide that a self-petitioner cannot handle independently?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>The case architecture that determines success: field of endeavour construction, criterion mapping, up to twelve recommendation letters drafted from scratch, the proprietary salary analytics framework (100% success rate on that criterion), a media network enabling published coverage where it's limited, and twelve months of RFE response support. Evidence you hold is frequently not in the format USCIS expects. Burlington Consult builds the strongest argument from the evidence that exists.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">Are USCIS filing fees included?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>No. USCIS government filing fees are payable directly to USCIS. Current I-140 fees: $715 plus $600 Asylum Programme Fee ($1,315 total). Optional premium processing (Form I-907): $2,965 additional, providing a 15-business-day decision. Burlington Consult advises on whether premium processing is appropriate in each case.</p></div>
+    </div>
+
+    <div class="faq-item">
+      <button class="faq-question" onclick="this.parentElement.classList.toggle('open')">What alternative fee arrangements are available?<span class="faq-icon"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="6" y1="1" x2="6" y2="11"/><line x1="1" y1="6" x2="11" y2="6"/></svg></span></button>
+      <div class="faq-answer"><p>Burlington Consult accommodates deferred payment, phased structures, and milestone-tied arrangements. No alternative arrangement affects the quality or scope of the work. Clients are encouraged to raise this at the outset rather than treating it as a barrier to proceeding.</p></div>
+    </div>
+
+    <div class="faq-cta-box">
+      <h3>Still have questions?</h3>
+      <p>Book a 30-minute consultation for a direct assessment of your profile and eligibility.</p>
+      <a href="book.html" class="faq-cta-btn">Book a Consultation — $250 <span style="transition: transform 0.25s;">&rarr;</span></a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-copy">&copy; 2026 Burlington Consult. All rights reserved.</div>
+    <div class="footer-legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Disclaimer</a></div>
+  </div>
+</footer>
+</body>
+</html>
