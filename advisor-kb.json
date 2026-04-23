@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "version": "1.0",
+    "last_updated": "2026-03-30",
+    "notes": "Add new entries to any category. The bot will use these as its primary knowledge source. Keep answers concise — 2-4 paragraphs max."
+  },
+
+  "firm": {
+    "name": "Burlington Consult",
+    "type": "Immigration strategy and advisory firm",
+    "incorporation": "Incorporated in Delaware",
+    "offices": {
+      "us": "1585 Massachusetts Avenue, Suite 78, Cambridge, MA 02138",
+      "nigeria": "The Octagon, Victoria Island, Lagos"
+    },
+    "focus": "EB-1A Extraordinary Ability and EB-2 National Interest Waiver petitions",
+    "differentiator": "Both founders hold approved EB-1A petitions. The firm is led by practitioners who have been through the process themselves.",
+    "disclaimer": "Burlington Consult provides immigration strategy and advisory services. This does not constitute the practice of law and does not establish an attorney-client relationship."
+  },
+
+  "founders": {
+    "chris": {
+      "name": "Chris Ogbodo",
+      "full_name": "Earl Chukwuebuka 'Chris' Ogbodo",
+      "title": "Founder & CEO",
+      "credentials": "Harvard Law School LL.M. (Technology Law & AI Policy, Class of 2026). Incoming Harvard Business School MBA (Class of 2028). Self-petitioned EB-1A holder, approved on first submission without a lawyer.",
+      "career": "Public Policy Manager at Meta for Anglophone West Africa. AI and responsible technology advisor at Luminate/Omidyar Group ($20M+ portfolio). Associate at Templars on the $3B Nigeria LNG Train 7 project. Africa's first Google Policy Fellow. $500,000+ in scholarships from Harvard, Michigan Ross, Georgetown, USC, Columbia."
+    },
+    "nkem": {
+      "name": "Nkem Nweke",
+      "title": "Co-founder",
+      "credentials": "Einstein Visa (EB-1A) holder. MBA from University of Manchester Business School. PMP certified.",
+      "career": "15+ years building regulated platforms at Microsoft (Engineering Innovation Lead across 26 countries), Hewlett Packard, and Dimension Data. TEDx speaker. Founder of Nesi. Oversees Burlington's technology architecture, client systems, and operational infrastructure across three continents."
+    }
+  },
+
+  "services": {
+    "dual_petition": {
+      "name": "EB-1A & EB-2 NIW Dual Petition",
+      "price": "$20,000",
+      "comparable_price": "$35,000–$55,000 at leading U.S. immigration law firms",
+      "includes": [
+        "Proposed endeavour framework development",
+        "Full EB-1A petition (I-140) — criterion-by-criterion argument construction",
+        "Full EB-2 NIW petition (I-140) — Dhanasar three-prong framework",
+        "Up to 12 recommendation letters drafted from scratch",
+        "Evidence architecture — full documentary record curated to USCIS standards",
+        "Independent legal review",
+        "Strategic advisory services",
+        "12-month RFE and NOID retainer at no additional charge"
+      ],
+      "milestones": [
+        { "trigger": "Engagement confirmation", "amount": "$5,000" },
+        { "trigger": "Letters + first drafts at 90%", "amount": "$5,000" },
+        { "trigger": "USCIS submission confirmed", "amount": "$5,000" },
+        { "trigger": "Expenses retainer (press + legal)", "amount": "$5,000" }
+      ],
+      "credit_ladder": "$85 Profile Assessment (normally $113) → credited toward $169 consultation (normally $225) → credited toward engagement. Every fee rolls forward."
+    },
+    "profile_assessment": {
+      "name": "Profile Assessment",
+      "price": "$85 (normally $113 — limited 25% discount)",
+      "description": "Written assessment of your professional record against EB-1A criteria and the NIW Dhanasar framework. Delivered within 48 hours. Fee credited toward consultation.",
+      "url": "/assess"
+    },
+    "consultation": {
+      "name": "Consultation",
+      "price": "$169 (normally $225 — limited 25% discount)",
+      "description": "30-minute focused session covering your profile, the strongest available pathway, the most viable field of endeavour, and a direct assessment of eligibility. Fee credited toward engagement.",
+      "url": "/book"
+    },
+    "a_la_carte": [
+      { "name": "Recommendation Letters", "price": "$800", "unit": "per letter" },
+      { "name": "Evidence Architecture", "price": "$2,500" },
+      { "name": "RFE Response Drafting", "price": "$3,000" },
+      { "name": "Proposed Endeavour Development", "price": "$3,500" },
+      { "name": "Single Petition Drafting", "price": "$8,000" }
+    ]
+  },
+
+  "pathways": {
+    "eb1a": {
+      "name": "EB-1A (Einstein Visa)",
+      "description": "The most distinguished employment-based visa the United States issues. Places holders in the same statutory classification as Nobel Prize laureates. No job offer, no employer sponsor, no labor market test.",
+      "requirement": "Must demonstrate sustained national or international acclaim by meeting at least 3 of 10 regulatory criteria, followed by a final merits determination.",
+      "criteria": [
+        "Awards — nationally or internationally recognised prizes for excellence",
+        "Membership — in associations requiring outstanding achievements",
+        "Published material — about the petitioner in major trade or professional publications",
+        "Judging — participation as a judge of others' work in the field",
+        "Original contributions — of major significance in the field",
+        "Scholarly articles — in professional or major trade publications",
+        "Critical role — leading or critical role for distinguished organisations",
+        "High salary — relative to peers in the field in relevant country",
+        "Commercial success — in the performing arts",
+        "Display of work — at artistic exhibitions or showcases"
+      ],
+      "stat": "Fewer than 5% of all employment-based green cards carry the EB-1A classification annually."
+    },
+    "niw": {
+      "name": "EB-2 National Interest Waiver",
+      "description": "Self-petitioned pathway for professionals whose proposed work serves a demonstrable U.S. national interest. No employer sponsor or PERM labor certification required.",
+      "requirement": "Must satisfy the Dhanasar three-prong test.",
+      "dhanasar_prongs": [
+        "Substantial merit and national importance of the proposed endeavour",
+        "The petitioner is well positioned to advance the endeavour",
+        "On balance, it is beneficial to the United States to waive the job offer requirement"
+      ]
+    },
+    "dual_filing": "Burlington files both EB-1A and NIW simultaneously as standard practice. This preserves the same priority date across both pathways, creates strategic redundancy, and allows a single evidence record to support both petitions."
+  },
+
+  "timeline": {
+    "engagement_start": "Within 48 hours of first instalment",
+    "letters": "First drafts within 1 week of receiving materials",
+    "petition_draft": "First complete petition draft within 2-3 weeks",
+    "filing": "Review, legal review, and USCIS submission within 3-4 weeks",
+    "premium_processing": "15 business days for I-140 decision (Form I-907, $2,965 government fee)",
+    "standard_processing": "20-22 months",
+    "rfe_retainer": "12 months from submission date, at no additional charge",
+    "rfe_resolution": "Within 60 business days"
+  },
+
+  "political_moment": {
+    "travel_ban": "Presidential Proclamation 10998 (December 2025) imposed a partial entry suspension on Nigerian nationals but explicitly preserved case-by-case waivers for individuals whose entry serves U.S. national interests. The I-140 petition and entry restriction are separate legal instruments. An I-140 can be filed regardless. A strong EB-1A or NIW approval is itself the most direct evidence for the national interest exception.",
+    "uscis_hold": "USCIS Policy Memorandum PM-602-0194 placed a hold on final adjudication for nationals of travel restriction countries. Processing continues up to the point of final adjudication. RFEs are being actively issued. Legal challenges are proceeding in federal court.",
+    "proposed_rules": "DHS proposed rule RIN 1615-AC85 would raise evidentiary thresholds for EB-1A and NIW. Draft regulations anticipated in 2026. Not yet operative. Petitions filed now are assessed against current standards.",
+    "i140_permanence": "An approved I-140 is permanent, does not expire, and simply preserves optionality. The adjustment of status application can be filed later. The priority date is established the day USCIS receives the I-140.",
+    "urgency": "Every month of delay in filing is a month later in the queue. Filing now, under current standards, establishes the priority date and positions the petitioner for when the adjudicatory environment resolves."
+  },
+
+  "faq": [
+    {
+      "question": "Do I need a job offer in the United States?",
+      "answer": "No. Both EB-1A and EB-2 NIW are self-petitioned pathways. The green card is tied to your expertise and record, not to any employer, institution, or role."
+    },
+    {
+      "question": "I am a Nigerian national. Can I still file?",
+      "answer": "Yes. The I-140 petition and entry restriction are separate instruments. You can file regardless of the travel ban. An approved I-140 is permanent, does not expire, and is the strongest evidence for the national interest exception when the restriction is lifted."
+    },
+    {
+      "question": "What does Burlington provide that I cannot do myself?",
+      "answer": "The EB-1A and NIW are self-petition pathways by design. Burlington's lead adviser filed and obtained approval on a self-petition, on first submission. What Burlington provides is the case architecture that determines whether a petition succeeds or produces a Request for Evidence. Evidence that a petitioner holds is frequently not in the format or framing USCIS expects."
+    },
+    {
+      "question": "Are USCIS filing fees included?",
+      "answer": "No. USCIS government filing fees are payable directly to USCIS. Current standard I-140 fees: $715 plus $600 Asylum Programme Fee, totalling $1,315. Optional premium processing (Form I-907): $2,965."
+    },
+    {
+      "question": "What is the field of endeavour?",
+      "answer": "The most consequential decision in any petition. It is the specific articulation of what the petitioner proposes to pursue in the United States and why that work constitutes a national interest. Burlington identifies and stress-tests this before any drafting begins. Errors at this stage are not correctable by adding stronger evidence later."
+    },
+    {
+      "question": "Can Burlington accommodate flexible payment?",
+      "answer": "Yes. Burlington accommodates deferred payment arrangements, phased structures, and arrangements tied to specific milestones. No alternative arrangement affects the quality or scope of the work."
+    },
+    {
+      "question": "What is the referral programme?",
+      "answer": "When you introduce a qualified candidate who engages Burlington at any fee level, that person receives whichever is greater: a flat $5,000 reduction or a 40% discount on the agreed fee. At the standard $20,000 rate, the referred client pays $12,000."
+    }
+  ],
+
+  "custom_qa": [
+  ]
+}

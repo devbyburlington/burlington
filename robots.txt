@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /advisor
+Disallow: /booking-confirmed
+
+Sitemap: https://www.burlingtonconsult.com/sitemap.xml
