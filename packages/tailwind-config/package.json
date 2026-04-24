@@ -1,0 +1,15 @@
+{
+  "name": "@burlington/tailwind-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./tailwind.config.ts",
+  "types": "./tailwind.config.ts",
+  "dependencies": {
+    "@burlington/design-tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4",
+    "typescript": "^5"
+  }
+}

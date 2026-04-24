@@ -1,4 +1,10 @@
 node_modules/
+.next/
+dist/
+.turbo/
+.env
+.env.local
+.env.*.local
 
 # Claude Code local overrides
 .claude/local/
