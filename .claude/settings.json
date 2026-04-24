@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm run *)",
+      "Bash(pnpm test *)",
+      "Bash(pnpm typecheck)",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm db:*)",
+      "Bash(git diff *)",
+      "Bash(git status)",
+      "Bash(git log *)",
+      "Edit(apps/**)",
+      "Edit(packages/**)",
+      "Edit(supabase/migrations/**)",
+      "Edit(.claude/**)"
+    ],
+    "deny": [
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(rm -rf *)",
+      "Bash(pnpm publish *)",
+      "Edit(.env*)",
+      "Edit(*.env)"
+    ],
+    "ask": [
+      "Bash(git push *)",
+      "Bash(git commit *)",
+      "Bash(pnpm install *)",
+      "Bash(supabase db push *)",
+      "Edit(package.json)",
+      "Edit(pnpm-lock.yaml)"
+    ]
+  }
+}
