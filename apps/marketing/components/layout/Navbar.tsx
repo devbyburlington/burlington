@@ -39,6 +39,12 @@ export function Navbar() {
 
   useEffect(() => {
     setPortalUrl(getPortalUrl())
+
+    const handlePageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setIsNavigatingToPortal(false)
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
   }, [])
 
   useEffect(() => {
