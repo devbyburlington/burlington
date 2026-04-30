@@ -15,7 +15,10 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Burlington Consult — Client Portal',
+  title: {
+    default: 'Burlington Consult',
+    template: '%s | Burlington Consult',
+  },
   description: 'Manage your immigration case, book consultations, and communicate with your team.',
 }
 

@@ -15,9 +15,25 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Burlington Consult — Premium U.S. Immigration Advisory',
+  title: {
+    default: 'Burlington Consult',
+    template: '%s | Burlington Consult',
+  },
   description:
-    'Burlington Consult works with exceptional professionals worldwide on EB-1A and EB-2 NIW petitions.',
+    'Burlington Consult develops and files Einstein Visa (EB-1A) and NIW (EB-2) petitions for high-achieving professionals — enabling permanent U.S. residency without an employer sponsor.',
+  openGraph: {
+    title: 'Burlington Consult',
+    description: 'The fastest path to a U.S. green card for exceptional professionals.',
+    images: ['/og-image.png'],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export default function RootLayout({
@@ -26,8 +42,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
-      <body className="bg-ink font-sans text-white antialiased">
+    <html lang="en" className={`${playfair.variable} ${inter.variable} bg-[#0A141A]`} suppressHydrationWarning>
+      <body className="flex min-h-dvh flex-col overflow-x-hidden bg-off-white font-sans text-burl-gray-700 antialiased" suppressHydrationWarning>
         {children}
       </body>
     </html>

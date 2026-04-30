@@ -1,1 +1,2 @@
-// Shared UI components — populated as components are built
+export { SocialLinks } from './SocialLinks'
+export { SectionLabel } from './SectionLabel'
