@@ -174,8 +174,8 @@ export function Navbar() {
               href={link.href}
               className={`group flex items-center justify-between rounded-xl px-4 py-3.5 transition-all ${
                 pathname === link.href
-                  ? 'bg-teal/[.08] border border-teal-light/10'
-                  : 'border border-transparent hover:bg-white/[.03]'
+                  ? 'bg-gradient-to-r from-teal/15 to-transparent border-l-2 border-teal-light'
+                  : 'border-l-2 border-transparent hover:bg-white/[.03]'
               }`}
               onClick={close}
             >
