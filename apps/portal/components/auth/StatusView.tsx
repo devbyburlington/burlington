@@ -11,7 +11,7 @@ type ApplicationStatus = 'pending' | 'approved' | 'waitlisted' | 'rejected'
 
 export function StatusView() {
   // TODO: fetch real status from Supabase
-  const status: ApplicationStatus = 'pending'
+  const status = 'pending' as ApplicationStatus
   const appliedAt = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
