@@ -18,6 +18,7 @@ function setConsent(value: Consent) {
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false)
+  const [dismissing, setDismissing] = useState(false)
 
   useEffect(() => {
     const existing = getConsent()
@@ -27,20 +28,19 @@ export function CookieBanner() {
     }
   }, [])
 
-  function handleAccept() {
-    setConsent('accepted')
-    setVisible(false)
-  }
-
-  function handleDecline() {
-    setConsent('declined')
-    setVisible(false)
+  function dismiss(consent: Consent) {
+    setDismissing(true)
+    setTimeout(() => {
+      setConsent(consent)
+      setVisible(false)
+      setDismissing(false)
+    }, 400)
   }
 
   if (!visible) return null
 
   return (
-    <div className="cookie-banner">
+    <div className={`cookie-banner ${dismissing ? 'cookie-banner-exit' : ''}`}>
       <div className="cookie-banner-inner">
         <p className="cookie-banner-text">
           We use cookies to analyse site traffic and improve your experience.
@@ -50,10 +50,10 @@ export function CookieBanner() {
           </Link>
         </p>
         <div className="cookie-banner-actions">
-          <button onClick={handleDecline} className="cookie-btn-decline">
+          <button onClick={() => dismiss('declined')} className="cookie-btn-decline">
             Decline
           </button>
-          <button onClick={handleAccept} className="cookie-btn-accept">
+          <button onClick={() => dismiss('accepted')} className="cookie-btn-accept">
             Accept
           </button>
         </div>

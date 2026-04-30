@@ -1346,6 +1346,15 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes cookie-slide-down {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(100%); }
+}
+
+.cookie-banner-exit {
+  animation: cookie-slide-down 0.4s ease-in forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
