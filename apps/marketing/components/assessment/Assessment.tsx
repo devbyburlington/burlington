@@ -411,14 +411,46 @@ function CollapsibleSection({ title, badge, children, defaultOpen = false }: {
   )
 }
 
-function EmailCaptureForm({ onSubmit }: { onSubmit: () => void }) {
+interface EmailCaptureProps {
+  onSubmit: () => void
+  results?: { fieldId: string; tierName: string; met: number; total: number; pct: number }
+}
+
+function EmailCaptureForm({ onSubmit, results }: EmailCaptureProps) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [country, setCountry] = useState('')
   const [linkedin, setLinkedin] = useState('')
   const [updates, setUpdates] = useState(false)
+  const [sending, setSending] = useState(false)
 
-  const canSubmit = name.trim() && email.trim() && email.includes('@')
+  const canSubmit = name.trim() && email.trim() && email.includes('@') && !sending
+
+  const handleSubmit = async () => {
+    if (!canSubmit) return
+    setSending(true)
+    try {
+      await fetch(`${PORTAL_URL}/api/assessment-leads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          country: country || undefined,
+          linkedin_url: linkedin || undefined,
+          marketing_consent: updates,
+          field_id: results?.fieldId,
+          tier: results?.tierName,
+          criteria_met: results?.met,
+          criteria_total: results?.total,
+          score_pct: results?.pct,
+        }),
+      })
+    } catch {
+      // Capture is best-effort — don't block the user
+    }
+    onSubmit()
+  }
 
   return (
     <div className="rounded-2xl border border-burl-gray-100 bg-warm-gray p-6 sm:p-7">
@@ -455,14 +487,16 @@ function EmailCaptureForm({ onSubmit }: { onSubmit: () => void }) {
       <button
         type="button"
         disabled={!canSubmit}
-        onClick={() => canSubmit && onSubmit()}
+        onClick={handleSubmit}
         className="inline-flex items-center gap-2.5 rounded-lg bg-teal px-7 py-3.5 text-[0.875rem] font-medium text-white transition-all hover:-translate-y-px hover:bg-teal-dark hover:shadow-[0_8px_24px_rgba(13,148,136,.2)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
       >
-        Email Me My Results
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-          <line x1="5" y1="12" x2="19" y2="12" />
-          <polyline points="12 5 19 12 12 19" />
-        </svg>
+        {sending ? 'Saving...' : 'Email Me My Results'}
+        {!sending && (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
+        )}
       </button>
     </div>
   )
@@ -776,7 +810,10 @@ function ResultsPhase({ answers, fieldId, onRestart }: { answers: Record<string,
           {/* Email capture — collapsible on mobile */}
           {!captured ? (
             <CollapsibleSection title="Save your results">
-              <EmailCaptureForm onSubmit={() => setCaptured(true)} />
+              <EmailCaptureForm
+                onSubmit={() => setCaptured(true)}
+                results={{ fieldId, tierName: tier.name, met: originalScore.met, total: applicable.length, pct: originalScore.pct }}
+              />
             </CollapsibleSection>
           ) : (
             <div className="mb-4 rounded-xl border border-teal/20 bg-teal/[.04] px-6 py-5 text-center animate-assess-fade-in lg:mb-12">
