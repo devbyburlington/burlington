@@ -246,6 +246,51 @@ export interface Database {
         }
         Relationships: []
       }
+      assessment_leads: {
+        Row: {
+          id: string
+          name: string
+          email: string
+          country: string | null
+          linkedin_url: string | null
+          marketing_consent: boolean
+          field_id: string | null
+          tier: string | null
+          criteria_met: number | null
+          criteria_total: number | null
+          score_pct: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          email: string
+          country?: string | null
+          linkedin_url?: string | null
+          marketing_consent?: boolean
+          field_id?: string | null
+          tier?: string | null
+          criteria_met?: number | null
+          criteria_total?: number | null
+          score_pct?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          email?: string
+          country?: string | null
+          linkedin_url?: string | null
+          marketing_consent?: boolean
+          field_id?: string | null
+          tier?: string | null
+          criteria_met?: number | null
+          criteria_total?: number | null
+          score_pct?: number | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -258,3 +303,4 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Address = Database['public']['Tables']['addresses']['Row']
 export type PendingJob = Database['public']['Tables']['pending_jobs']['Row']
 export type ProcessedWebhook = Database['public']['Tables']['processed_webhooks']['Row']
+export type AssessmentLead = Database['public']['Tables']['assessment_leads']['Row']
