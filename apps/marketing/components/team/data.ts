@@ -3,6 +3,8 @@ export interface TeamMemberProfile {
   slug: string
   role: string
   photo?: string
+  photoPosition?: string
+  grayscale?: boolean
   pills?: string[]
   bio: string[]
   quote?: string
@@ -220,6 +222,7 @@ export const TEAM: TeamMemberProfile[] = [
     slug: 'chukwu-dike',
     role: 'Software Engineer',
     photo: '/team-chukwudike.jpg',
+    photoPosition: 'center_top',
     pills: ['Medical Doctor', 'Full-Stack Developer'],
     bio: [
       `Chukwu-Dike brings a rare dual background as both a medical doctor and full-stack software engineer. His medical training gives him a clinician's attention to detail and diagnostic rigour, while his engineering skills allow him to build the tools that power Burlington's internal operations.`,
@@ -232,6 +235,8 @@ export const TEAM: TeamMemberProfile[] = [
     name: 'Adonai Jonathan',
     slug: 'adonai',
     role: 'Head of Engineering',
+    photo: '/team-adonai.jpg',
+    grayscale: true,
     pills: ['4+ Years Engineering', 'Front-End & Infrastructure', 'Product Development'],
     bio: [
       `Adonai is the technical backbone of Burlington Consult. He designed and built the firm's entire digital platform from the ground up: every page, every component, every interaction, every line of production code. The site is not a theme. It is not a template. It is a custom-built system engineered to communicate institutional credibility at every touchpoint.`,

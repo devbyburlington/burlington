@@ -1,38 +1,109 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@burlington/shared/src/supabase/client'
+import { loginSchema } from '../../lib/schemas/auth'
 import { getMarketingUrl, MARKETING_URL_FALLBACK } from '../../lib/utils/marketing-url'
 import { AuthBackLink } from './AuthBackLink'
 import { AuthWordmark } from './AuthWordmark'
 import { AuthFooter } from './AuthFooter'
 
 export function LoginForm() {
+  const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [rememberMe, setRememberMe] = useState(true)
-  const [is2FA, setIs2FA] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const [backUrl, setBackUrl] = useState(MARKETING_URL_FALLBACK)
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
     const base = getMarketingUrl()
-    const from = new URLSearchParams(window.location.search).get('from')
+    const from = params.get('from')
     setBackUrl(from && from.startsWith('/') ? base + from : base)
+
+    if (params.get('error') === 'auth') {
+      setError('Google sign-in failed. Please try again.')
+    }
   }, [])
+
+  const handleLogin = async () => {
+    const parsed = loginSchema.safeParse({ email, password })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Invalid input')
+      return
+    }
+    setError('')
+    setIsLoading(true)
+
+    const supabase = createClient()
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+    })
+
+    if (authError) {
+      if (authError.message.includes('Invalid login credentials')) {
+        const res = await fetch('/api/check-auth-method', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        })
+        if (res.ok) {
+          const { isOAuthOnly } = await res.json()
+          if (isOAuthOnly) {
+            setIsLoading(false)
+            setError('This account uses Google sign-in. Please use "Continue with Google" below, or set a password in your profile settings.')
+            return
+          }
+        }
+        setIsLoading(false)
+        setError('Invalid email or password. Please try again.')
+      } else if (authError.message.includes('Email not confirmed')) {
+        setIsLoading(false)
+        setError('Please verify your email address before signing in.')
+      } else {
+        setIsLoading(false)
+        setError('Unable to sign in. Please try again.')
+      }
+      return
+    }
+
+    const maxAge = rememberMe ? 7 * 24 * 60 * 60 : 24 * 60 * 60
+    await fetch('/api/set-persist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ maxAge }),
+    })
+
+    setIsRedirecting(true)
+
+    const params = new URLSearchParams(window.location.search)
+    const redirectTo = params.get('redirect')
+    const safeRedirect = redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//') ? redirectTo : '/'
+    router.replace(safeRedirect)
+    router.refresh()
+  }
 
   return (
     <main className="auth-form-panel">
       <div className="auth-form-top">
-        {is2FA ? (
-          <AuthBackLink onClick={() => setIs2FA(false)} label="Back" />
-        ) : (
-          <AuthBackLink href={backUrl} external label="Back to site" />
-        )}
+        <AuthBackLink href={backUrl} external label="Back to site" />
         <AuthWordmark />
       </div>
 
       <div className="auth-form-wrap">
-        {!is2FA ? (
+        {isRedirecting ? (
+          <div className="flex flex-col items-center py-16">
+            <div className="mb-6 h-8 w-8 animate-spin rounded-full border-2 border-burl-gray-200 border-t-teal" />
+            <p className="text-[0.875rem] text-burl-gray-400">Signing you in...</p>
+          </div>
+        ) : (
           <SignInStep
             showPassword={showPassword}
             onTogglePassword={() => setShowPassword(!showPassword)}
@@ -40,10 +111,12 @@ export function LoginForm() {
             onToggleRemember={() => setRememberMe(!rememberMe)}
             email={email}
             onEmailChange={setEmail}
-            onSubmit={() => setIs2FA(true)}
+            password={password}
+            onPasswordChange={setPassword}
+            error={error}
+            isLoading={isLoading}
+            onSubmit={handleLogin}
           />
-        ) : (
-          <TwoFAStep email={email} />
         )}
       </div>
 
@@ -59,6 +132,10 @@ function SignInStep({
   onToggleRemember,
   email,
   onEmailChange,
+  password,
+  onPasswordChange,
+  error,
+  isLoading,
   onSubmit,
 }: {
   showPassword: boolean
@@ -67,6 +144,10 @@ function SignInStep({
   onToggleRemember: () => void
   email: string
   onEmailChange: (v: string) => void
+  password: string
+  onPasswordChange: (v: string) => void
+  error: string
+  isLoading: boolean
   onSubmit: () => void
 }) {
   return (
@@ -78,6 +159,12 @@ function SignInStep({
         Access your case, documents, and progress.
       </p>
 
+      {error && (
+        <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[0.8125rem] text-red-700">
+          {error}
+        </div>
+      )}
+
       <form onSubmit={(e) => { e.preventDefault(); onSubmit() }}>
         <div className="auth-field">
           <label htmlFor="login-email" className="auth-field-label">Email address</label>
@@ -87,6 +174,7 @@ function SignInStep({
             type="email"
             autoComplete="email"
             placeholder="name@example.com"
+            required
             value={email}
             onChange={(e) => onEmailChange(e.target.value)}
           />
@@ -101,6 +189,9 @@ function SignInStep({
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               placeholder="Enter your password"
+              required
+              value={password}
+              onChange={(e) => onPasswordChange(e.target.value)}
             />
             <button
               type="button"
@@ -141,22 +232,36 @@ function SignInStep({
                 </svg>
               )}
             </span>
-            Remember this device for 30 days
+            Remember this device for 7 days
           </button>
         </div>
 
-        <button type="submit" className="auth-btn-primary">
-          Sign in
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-            <line x1="5" y1="12" x2="19" y2="12" />
-            <polyline points="12 5 19 12 12 19" />
-          </svg>
+        <button type="submit" className="auth-btn-primary" disabled={isLoading}>
+          {isLoading ? 'Signing in…' : 'Sign in'}
+          {!isLoading && (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          )}
         </button>
       </form>
 
       <div className="auth-divider"><span>Or</span></div>
 
-      <button type="button" className="auth-btn-sso">
+      <button
+        type="button"
+        className="auth-btn-sso"
+        onClick={async () => {
+          const supabase = createClient()
+          await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: `${window.location.origin}/auth/callback`,
+            },
+          })
+        }}
+      >
         <svg width="16" height="16" viewBox="0 0 24 24">
           <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
           <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -176,118 +281,3 @@ function SignInStep({
   )
 }
 
-function maskEmail(email: string): string {
-  const [local, domain] = email.split('@')
-  if (!local || !domain) return email
-  const visible = local.length <= 3 ? local.charAt(0) : local.slice(0, 3)
-  return `${visible}${'*'.repeat(Math.max(local.length - visible.length, 2))}@${domain}`
-}
-
-function useResendCooldown(seconds: number) {
-  const [remaining, setRemaining] = useState(seconds)
-
-  useEffect(() => {
-    if (remaining <= 0) return
-    const timer = setTimeout(() => setRemaining(remaining - 1), 1000)
-    return () => clearTimeout(timer)
-  }, [remaining])
-
-  const reset = () => setRemaining(seconds)
-  return { remaining, canResend: remaining <= 0, reset }
-}
-
-function TwoFAStep({ email }: { email: string }) {
-  const { remaining, canResend, reset } = useResendCooldown(30)
-
-  const handleResend = () => {
-    if (!canResend) return
-    reset()
-  }
-
-  const handleInput = (e: React.FormEvent<HTMLInputElement>) => {
-    const input = e.currentTarget
-    if (input.value.length === 1) {
-      const next = input.nextElementSibling as HTMLInputElement | null
-      next?.focus()
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !e.currentTarget.value) {
-      const prev = e.currentTarget.previousElementSibling as HTMLInputElement | null
-      prev?.focus()
-    }
-  }
-
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const paste = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
-    if (paste.length === 0) return
-    e.preventDefault()
-    const container = e.currentTarget.parentElement
-    if (!container) return
-    const inputs = container.querySelectorAll<HTMLInputElement>('input')
-    paste.split('').forEach((char, i) => {
-      if (inputs[i]) inputs[i].value = char
-    })
-    const focusIndex = Math.min(paste.length, 5)
-    inputs[focusIndex]?.focus()
-  }
-
-  return (
-    <>
-      <h1 className="mb-2 font-serif text-[1.4375rem] font-medium leading-[1.2] tracking-tight text-burl-gray-700">
-        Check your email.
-      </h1>
-      <p className="mb-3 text-[0.84rem] leading-[1.6] text-burl-gray-400">
-        We&apos;ve sent a 6-digit verification code to:
-      </p>
-      <p className="mb-8 text-[0.875rem] font-medium text-burl-gray-700">
-        {maskEmail(email)}
-      </p>
-
-      <div className="auth-otp-help">
-        <b>Note</b> &middot; The code expires in 10 minutes. If you don&apos;t see it, check your spam folder. The email comes from <span className="font-medium text-burl-gray-500">hello@burlingtonconsult.com</span>.
-      </div>
-
-      <form onSubmit={(e) => { e.preventDefault() }}>
-        <div className="auth-field">
-          <label className="auth-field-label">6-digit code</label>
-          <div className="flex gap-2.5">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <input
-                key={i}
-                className="auth-otp-digit"
-                type="text"
-                maxLength={1}
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                aria-label={`Digit ${i + 1} of 6`}
-                onInput={handleInput}
-                onKeyDown={handleKeyDown}
-                onPaste={i === 0 ? handlePaste : undefined}
-              />
-            ))}
-          </div>
-        </div>
-
-        <button type="submit" className="auth-btn-primary">
-          Verify &amp; sign in
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </button>
-      </form>
-
-      <p className="mt-5 text-center text-[0.75rem] text-burl-gray-400">
-        Didn&apos;t receive it?{' '}
-        {canResend ? (
-          <button type="button" onClick={handleResend} className="font-medium text-teal transition-colors hover:text-teal-dark">
-            Resend code
-          </button>
-        ) : (
-          <span className="font-medium tabular-nums text-burl-gray-300">Resend in {remaining}s</span>
-        )}
-      </p>
-    </>
-  )
-}

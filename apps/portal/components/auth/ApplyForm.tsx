@@ -1,23 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
+import { createClient } from '@burlington/shared/src/supabase/client'
+import { isRestrictedCountry } from '@burlington/shared/src/constants/sanctions'
+import { isPasswordStrong, PASSWORD_RULES } from '../../lib/schemas/auth'
+import { personalStepSchema, professionalStepSchema, immigrationStepSchema, accountStepSchema, profilePayloadSchema } from '../../lib/schemas/application'
 import { AuthBackLink } from './AuthBackLink'
 import { AuthWordmark } from './AuthWordmark'
 import { AuthFooter } from './AuthFooter'
 
-const STEPS = [
+const ALL_STEPS = [
   { label: 'You', key: 'personal' },
   { label: 'Work', key: 'professional' },
   { label: 'Goals', key: 'immigration' },
   { label: 'Account', key: 'account' },
 ] as const
 
-type StepKey = (typeof STEPS)[number]['key']
+const OAUTH_STEPS = [
+  { label: 'You', key: 'personal' },
+  { label: 'Work', key: 'professional' },
+  { label: 'Goals', key: 'immigration' },
+] as const
+
+type StepKey = (typeof ALL_STEPS)[number]['key']
 
 interface FormData {
-  fullName: string
+  firstName: string
+  lastName: string
   email: string
+  phoneCountryCode: string
   phone: string
   citizenshipCountry: string
   residenceCountry: string
@@ -36,8 +50,10 @@ interface FormData {
 }
 
 const INITIAL_DATA: FormData = {
-  fullName: '',
+  firstName: '',
+  lastName: '',
   email: '',
+  phoneCountryCode: '',
   phone: '',
   citizenshipCountry: '',
   residenceCountry: '',
@@ -96,11 +112,45 @@ const HOW_HEARD = [
 ]
 
 export function ApplyForm() {
+  const router = useRouter()
   const [step, setStep] = useState(0)
   const [data, setData] = useState<FormData>(INITIAL_DATA)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({})
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
+  const [isOAuthUser, setIsOAuthUser] = useState(false)
+  const STEPS = isOAuthUser ? OAUTH_STEPS : ALL_STEPS
+
+  useEffect(() => {
+    async function checkExistingSession() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('field_industry, status')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.field_industry) {
+        router.replace('/status')
+        return
+      }
+
+      const isOAuth = user.app_metadata?.provider !== 'email'
+      if (!isOAuth) return
+
+      setIsOAuthUser(true)
+      setData(prev => ({
+        ...prev,
+        email: user.email ?? '',
+      }))
+    }
+    checkExistingSession()
+  }, [])
 
   useEffect(() => {
     try {
@@ -131,41 +181,96 @@ export function ApplyForm() {
     setErrors(prev => ({ ...prev, [field]: undefined }))
   }
 
-  const validateStep = (): boolean => {
+  const validateStep = async (): Promise<boolean> => {
     const errs: Partial<Record<keyof FormData, string>> = {}
 
     if (step === 0) {
-      if (!data.fullName.trim()) errs.fullName = 'Full name is required'
-      if (!data.email.trim()) errs.email = 'Email is required'
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) errs.email = 'Enter a valid email'
-      if (!data.citizenshipCountry) errs.citizenshipCountry = 'Select your country of citizenship'
-      if (!data.residenceCountry) errs.residenceCountry = 'Select your country of residence'
+      const parsed = personalStepSchema.safeParse(data)
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          const field = issue.path[0] as keyof FormData
+          if (!errs[field]) errs[field] = issue.message
+        }
+      }
+
+      let parsedPhone: ReturnType<typeof parsePhoneNumberFromString> = undefined
+      if (!errs.phone && !errs.phoneCountryCode && data.phoneCountryCode && data.phone.trim()) {
+        parsedPhone = parsePhoneNumberFromString(data.phone, data.phoneCountryCode as CountryCode)
+        if (!parsedPhone || !parsedPhone.isValid()) {
+          errs.phone = 'Enter a valid phone number for the selected country'
+        }
+      }
+
+      const shouldCheckEmail = !isOAuthUser && !errs.email
+      const shouldCheckPhone = !errs.phone
+      if (shouldCheckEmail || shouldCheckPhone) {
+        try {
+          const e164 = parsedPhone?.isValid() ? parsedPhone.format('E.164') : undefined
+          const res = await fetch('/api/check-duplicate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: shouldCheckEmail ? data.email.trim() : undefined,
+              phone: shouldCheckPhone && e164 ? e164 : undefined,
+            }),
+          })
+          if (res.ok) {
+            const { emailTaken, emailIsOAuth, phoneTaken } = await res.json()
+            if (shouldCheckEmail && emailTaken) {
+              errs.email = emailIsOAuth
+                ? 'This email is linked to a Google account. Please use "Continue with Google" to sign in.'
+                : 'An account with this email already exists'
+            }
+            if (phoneTaken) errs.phone = 'An account with this phone number already exists'
+          }
+        } catch { /* network error — let submission handle it */ }
+      }
+
+      if (!errs.citizenshipCountry && isRestrictedCountry(data.citizenshipCountry)) {
+        errs.citizenshipCountry = 'We are unable to accept applications from this jurisdiction due to US regulatory requirements'
+      }
+      if (!errs.residenceCountry && isRestrictedCountry(data.residenceCountry)) {
+        errs.residenceCountry = 'We are unable to accept applications from this jurisdiction due to US regulatory requirements'
+      }
     }
 
     if (step === 1) {
-      if (!data.field) errs.field = 'Select your field'
-      if (!data.highestEducation) errs.highestEducation = 'Select your education level'
+      const parsed = professionalStepSchema.safeParse(data)
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          const field = issue.path[0] as keyof FormData
+          if (!errs[field]) errs[field] = issue.message
+        }
+      }
     }
 
     if (step === 2) {
-      if (!data.immigrationGoal) errs.immigrationGoal = 'Select your immigration goal'
-      if (!data.howHeard) errs.howHeard = 'Tell us how you heard about us'
+      const parsed = immigrationStepSchema.safeParse(data)
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          const field = issue.path[0] as keyof FormData
+          if (!errs[field]) errs[field] = issue.message
+        }
+      }
     }
 
     if (step === 3) {
-      if (!data.password) errs.password = 'Create a password'
-      else if (!isPasswordStrong(data.password)) errs.password = 'Password does not meet all requirements'
-      if (!data.confirmPassword) errs.confirmPassword = 'Confirm your password'
-      else if (data.password !== data.confirmPassword) errs.confirmPassword = 'Passwords do not match'
+      const parsed = accountStepSchema.safeParse(data)
+      if (!parsed.success) {
+        for (const issue of parsed.error.issues) {
+          const field = issue.path[0] as keyof FormData
+          if (!errs[field]) errs[field] = issue.message
+        }
+      }
     }
 
     setErrors(errs)
     return Object.keys(errs).length === 0
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setSubmitted(true)
-    if (!validateStep()) return
+    if (!(await validateStep())) return
     if (step < STEPS.length - 1) {
       setSubmitted(false)
       setErrors({})
@@ -183,13 +288,117 @@ export function ApplyForm() {
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitted(true)
-    if (!validateStep()) return
-    // TODO: submit to Supabase before redirecting
+    if (!(await validateStep())) return
+
+    setSubmitError('')
+    setIsSubmitting(true)
+
+    const supabase = createClient()
+    const fullName = `${data.firstName.trim()} ${data.lastName.trim()}`
+
+    const rawPayload = {
+      full_name: fullName,
+      given_name: data.firstName.trim(),
+      family_name: data.lastName.trim(),
+      phone_e164: data.phone
+        ? (parsePhoneNumberFromString(data.phone, data.phoneCountryCode as CountryCode)?.format('E.164') ?? null)
+        : null,
+      country_citizenship_iso: data.citizenshipCountry || null,
+      country_residence_iso: data.residenceCountry || null,
+      employer: data.employer.trim() || null,
+      job_title: data.currentRole.trim() || null,
+      field_industry: data.field || null,
+      highest_education: data.highestEducation || null,
+      linkedin_url: data.linkedinUrl.trim() || null,
+      immigration_goal: data.immigrationGoal || null,
+      how_heard: data.howHeard === 'Other' ? data.howHeardOther.trim() : data.howHeard || null,
+      referral_source: data.referralSource.trim() || null,
+      marketing_consent: data.marketingConsent,
+    }
+
+    const payloadResult = profilePayloadSchema.safeParse(rawPayload)
+    if (!payloadResult.success) {
+      console.error('[ApplyForm] Profile payload validation failed', payloadResult.error.issues)
+      setIsSubmitting(false)
+      setSubmitError('Invalid form data. Please review your entries and try again.')
+      return
+    }
+    const profilePayload = payloadResult.data
+
+    if (isOAuthUser) {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setIsSubmitting(false)
+        setSubmitError('Your session has expired. Please sign in again.')
+        return
+      }
+
+      const { data: updatedRows, error: updateError } = await supabase
+        .from('profiles')
+        .update(profilePayload)
+        .eq('id', user.id)
+        .select()
+
+      if (updateError) {
+        console.error('[ApplyForm] Profile update failed', updateError)
+        setIsSubmitting(false)
+        setSubmitError('Unable to save your application. Please try again.')
+        return
+      }
+
+      if (!updatedRows?.length) {
+        console.error('[ApplyForm] Profile update returned 0 rows', { userId: user.id })
+      }
+
+      supabase
+        .from('profiles')
+        .update({ auth_provider: 'google', has_set_password: false })
+        .eq('id', user.id)
+        .then(() => {})
+    } else {
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: { full_name: fullName },
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=/nda`,
+        },
+      })
+
+      if (signUpError) {
+        setIsSubmitting(false)
+        if (signUpError.message.includes('already registered')) {
+          setSubmitError('An account with this email already exists. Please sign in instead.')
+        } else {
+          setSubmitError('Unable to create your account. Please try again.')
+        }
+        return
+      }
+
+      if (authData.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update(profilePayload)
+          .eq('id', authData.user.id)
+
+        if (profileError) {
+          console.error('[ApplyForm] Profile update failed for email user', profileError)
+        }
+      }
+
+      await fetch('/api/set-persist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maxAge: 24 * 60 * 60 }),
+      })
+    }
+
     localStorage.removeItem('burlington:form:apply')
-    window.location.href = '/nda'
+    router.push('/nda')
+    router.refresh()
   }
 
   return (
@@ -197,6 +406,8 @@ export function ApplyForm() {
       <div className="auth-form-top">
         {step > 0 ? (
           <AuthBackLink onClick={handleBack} label="Back" />
+        ) : isOAuthUser ? (
+          <div />
         ) : (
           <AuthBackLink href="/login" label="Sign in instead" />
         )}
@@ -210,9 +421,15 @@ export function ApplyForm() {
 
         <ProgressStepper steps={STEPS} current={step} />
 
+        {submitError && (
+          <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[0.8125rem] text-red-700">
+            {submitError}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           {step === 0 && (
-            <PersonalStep data={data} errors={errors} update={update} />
+            <PersonalStep data={data} errors={errors} update={update} isOAuthUser={isOAuthUser} />
           )}
           {step === 1 && (
             <ProfessionalStep data={data} errors={errors} update={update} />
@@ -220,7 +437,7 @@ export function ApplyForm() {
           {step === 2 && (
             <ImmigrationStep data={data} errors={errors} update={update} />
           )}
-          {step === 3 && (
+          {step === 3 && !isOAuthUser && (
             <AccountStep
               data={data}
               errors={errors}
@@ -245,17 +462,19 @@ export function ApplyForm() {
                 </svg>
               </button>
             ) : (
-              <button type="submit" className="auth-btn-primary">
-                Submit application
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+              <button type="submit" className="auth-btn-primary" disabled={isSubmitting}>
+                {isSubmitting ? (isOAuthUser ? 'Submitting…' : 'Creating account…') : 'Submit application'}
+                {!isSubmitting && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
               </button>
             )}
           </div>
         </form>
 
-        {step === 0 && (
+        {step === 0 && !isOAuthUser && (
           <p className="mt-6 text-[0.8125rem] text-burl-gray-400">
             Already have an account?{' '}
             <Link href="/login" className="font-medium text-teal transition-colors hover:text-teal-dark">
@@ -307,6 +526,7 @@ interface StepProps {
   data: FormData
   errors: Partial<Record<keyof FormData, string>>
   update: (field: keyof FormData, value: string | boolean) => void
+  isOAuthUser?: boolean
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -316,83 +536,97 @@ function FieldError({ message }: { message?: string }) {
 
 /* ── Step 1: Personal Info ── */
 
-function PersonalStep({ data, errors, update }: StepProps) {
+function PersonalStep({ data, errors, update, isOAuthUser }: StepProps) {
   return (
     <>
       <h2 className="mb-2 font-serif text-[1.4375rem] font-medium leading-[1.2] tracking-tight text-burl-gray-700">
         Tell us about yourself.
       </h2>
       <p className="mb-8 text-[0.84rem] leading-[1.6] text-burl-gray-400">
-        Start with the basics. All fields marked with * are required.
+        {isOAuthUser
+          ? 'Complete your application. Please enter your full legal name as it appears on your passport — this is required for immigration filings.'
+          : 'Start with the basics. All fields marked with * are required.'}
       </p>
 
-      <div className="auth-field">
-        <label htmlFor="apply-name" className="auth-field-label">Full name *</label>
-        <input
-          id="apply-name"
-          className="auth-field-input"
-          type="text"
-          autoComplete="name"
-          placeholder="As it appears on your passport"
-          value={data.fullName}
-          onChange={e => update('fullName', e.target.value)}
-        />
-        <FieldError message={errors.fullName} />
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+        <div className="auth-field">
+          <label htmlFor="apply-first-name" className="auth-field-label">First name *</label>
+          <input
+            id="apply-first-name"
+            className="auth-field-input"
+            type="text"
+            autoComplete="given-name"
+            placeholder="As on your passport"
+            value={data.firstName}
+            onChange={e => update('firstName', e.target.value)}
+          />
+          <FieldError message={errors.firstName} />
+        </div>
+
+        <div className="auth-field">
+          <label htmlFor="apply-last-name" className="auth-field-label">Last name *</label>
+          <input
+            id="apply-last-name"
+            className="auth-field-input"
+            type="text"
+            autoComplete="family-name"
+            placeholder="As on your passport"
+            value={data.lastName}
+            onChange={e => update('lastName', e.target.value)}
+          />
+          <FieldError message={errors.lastName} />
+        </div>
       </div>
 
       <div className="auth-field">
         <label htmlFor="apply-email" className="auth-field-label">Email address *</label>
-        <input
-          id="apply-email"
-          className="auth-field-input"
-          type="email"
-          autoComplete="email"
-          placeholder="name@example.com"
-          value={data.email}
-          onChange={e => update('email', e.target.value)}
-        />
+        {isOAuthUser ? (
+          <div className="rounded-lg border border-burl-gray-200 bg-warm-gray px-3.5 py-[13px] text-[1rem] text-burl-gray-400 sm:text-[0.875rem]">
+            {data.email}
+          </div>
+        ) : (
+          <input
+            id="apply-email"
+            className="auth-field-input"
+            type="email"
+            autoComplete="email"
+            placeholder="name@example.com"
+            value={data.email}
+            onChange={e => update('email', e.target.value)}
+          />
+        )}
         <FieldError message={errors.email} />
       </div>
 
       <div className="auth-field">
-        <label htmlFor="apply-phone" className="auth-field-label">Phone number</label>
-        <input
-          id="apply-phone"
-          className="auth-field-input"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+234 803 000 0000"
-          value={data.phone}
-          onChange={e => update('phone', e.target.value)}
+        <label htmlFor="apply-phone" className="auth-field-label">Phone number *</label>
+        <PhoneInput
+          countryCode={data.phoneCountryCode}
+          onCountryChange={code => update('phoneCountryCode', code)}
+          phone={data.phone}
+          onPhoneChange={val => update('phone', val)}
         />
+        <FieldError message={errors.phone} />
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div className="auth-field">
-          <label htmlFor="apply-citizenship" className="auth-field-label">Country of citizenship *</label>
-          <select
-            id="apply-citizenship"
-            className="auth-field-input"
+          <label className="auth-field-label">Country of citizenship *</label>
+          <CountrySelect
             value={data.citizenshipCountry}
-            onChange={e => update('citizenshipCountry', e.target.value)}
-          >
-            <option value="">Select country</option>
-            <CountryOptions />
-          </select>
+            onChange={code => update('citizenshipCountry', code)}
+            placeholder="Select country"
+          />
           <FieldError message={errors.citizenshipCountry} />
         </div>
 
         <div className="auth-field">
-          <label htmlFor="apply-residence" className="auth-field-label">Country of residence *</label>
-          <select
-            id="apply-residence"
-            className="auth-field-input"
+          <label className="auth-field-label">Country of residence *</label>
+          <CountrySelect
             value={data.residenceCountry}
-            onChange={e => update('residenceCountry', e.target.value)}
-          >
-            <option value="">Select country</option>
-            <CountryOptions />
-          </select>
+            onChange={code => update('residenceCountry', code)}
+            placeholder="Select country"
+          />
           <FieldError message={errors.residenceCountry} />
         </div>
       </div>
@@ -577,19 +811,6 @@ function ImmigrationStep({ data, errors, update }: StepProps) {
   )
 }
 
-/* ── Password helpers ── */
-
-const PASSWORD_RULES = [
-  { key: 'length', label: 'At least 8 characters', test: (p: string) => p.length >= 8 },
-  { key: 'lower', label: 'One lowercase letter', test: (p: string) => /[a-z]/.test(p) },
-  { key: 'upper', label: 'One uppercase letter', test: (p: string) => /[A-Z]/.test(p) },
-  { key: 'symbol', label: 'One symbol (!@#$%...)', test: (p: string) => /[^a-zA-Z0-9]/.test(p) },
-] as const
-
-function isPasswordStrong(password: string): boolean {
-  return PASSWORD_RULES.every(r => r.test(password))
-}
-
 /* ── Step 4: Account Creation ── */
 
 function AccountStep({
@@ -710,14 +931,422 @@ function AccountStep({
 
 /* ── Country list (ISO 3166-1, comprehensive) ── */
 
-function CountryOptions() {
-  return (
-    <>
-      {COUNTRIES.map(c => (
-        <option key={c.code} value={c.code}>{c.name}</option>
-      ))}
-    </>
+const PRIORITY_COUNTRIES = ['NG', 'GH', 'KE', 'ZA']
+
+const DIAL_CODES: { code: string; dial: string; name: string }[] = [
+  { code: 'NG', dial: '+234', name: 'Nigeria' },
+  { code: 'GH', dial: '+233', name: 'Ghana' },
+  { code: 'KE', dial: '+254', name: 'Kenya' },
+  { code: 'ZA', dial: '+27', name: 'South Africa' },
+  { code: 'US', dial: '+1', name: 'United States' },
+  { code: 'GB', dial: '+44', name: 'United Kingdom' },
+  { code: 'CA', dial: '+1', name: 'Canada' },
+  { code: 'IN', dial: '+91', name: 'India' },
+  { code: 'PK', dial: '+92', name: 'Pakistan' },
+  { code: 'AU', dial: '+61', name: 'Australia' },
+  { code: 'DE', dial: '+49', name: 'Germany' },
+  { code: 'FR', dial: '+33', name: 'France' },
+  { code: 'BR', dial: '+55', name: 'Brazil' },
+  { code: 'CN', dial: '+86', name: 'China' },
+  { code: 'AE', dial: '+971', name: 'UAE' },
+  { code: 'SG', dial: '+65', name: 'Singapore' },
+  { code: 'PH', dial: '+63', name: 'Philippines' },
+  { code: 'EG', dial: '+20', name: 'Egypt' },
+  { code: 'ET', dial: '+251', name: 'Ethiopia' },
+  { code: 'TZ', dial: '+255', name: 'Tanzania' },
+  { code: 'UG', dial: '+256', name: 'Uganda' },
+  { code: 'RW', dial: '+250', name: 'Rwanda' },
+  { code: 'CI', dial: '+225', name: "Côte d'Ivoire" },
+  { code: 'CM', dial: '+237', name: 'Cameroon' },
+  { code: 'SN', dial: '+221', name: 'Senegal' },
+  { code: 'JP', dial: '+81', name: 'Japan' },
+  { code: 'KR', dial: '+82', name: 'South Korea' },
+  { code: 'MX', dial: '+52', name: 'Mexico' },
+  { code: 'IE', dial: '+353', name: 'Ireland' },
+  { code: 'NL', dial: '+31', name: 'Netherlands' },
+  { code: 'IT', dial: '+39', name: 'Italy' },
+  { code: 'ES', dial: '+34', name: 'Spain' },
+  { code: 'SE', dial: '+46', name: 'Sweden' },
+  { code: 'CH', dial: '+41', name: 'Switzerland' },
+  { code: 'IL', dial: '+972', name: 'Israel' },
+  { code: 'SA', dial: '+966', name: 'Saudi Arabia' },
+  { code: 'QA', dial: '+974', name: 'Qatar' },
+  { code: 'MY', dial: '+60', name: 'Malaysia' },
+  { code: 'NZ', dial: '+64', name: 'New Zealand' },
+]
+
+function countryFlag(code: string): string {
+  return String.fromCodePoint(
+    ...code.toUpperCase().split('').map(c => 0x1f1e6 + c.charCodeAt(0) - 65)
   )
+}
+
+function getDialCode(code: string): string {
+  return DIAL_CODES.find(c => c.code === code)?.dial ?? ''
+}
+
+function CountrySelect({
+  value,
+  onChange,
+  placeholder,
+}: {
+  value: string
+  onChange: (code: string) => void
+  placeholder: string
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [highlighted, setHighlighted] = useState(-1)
+  const ref = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
+
+  useEffect(() => {
+    if (open) {
+      searchRef.current?.focus()
+      setHighlighted(-1)
+    } else {
+      setSearch('')
+    }
+  }, [open])
+
+  const selected = COUNTRIES.find(c => c.code === value)
+  const priority = PRIORITY_COUNTRIES.map(code => COUNTRIES.find(c => c.code === code)!)
+  const rest = COUNTRIES.filter(c => !PRIORITY_COUNTRIES.includes(c.code))
+
+  const filterCountries = (list: typeof COUNTRIES) =>
+    search ? list.filter(c => c.name.toLowerCase().includes(search.toLowerCase())) : list
+
+  const filteredPriority = filterCountries(priority)
+  const filteredRest = filterCountries(rest)
+  const allFiltered = [...filteredPriority, ...filteredRest]
+
+  useEffect(() => {
+    setHighlighted(-1)
+  }, [search])
+
+  useEffect(() => {
+    if (highlighted >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll('[role="option"]')
+      items[highlighted]?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [highlighted])
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlighted(prev => (prev < allFiltered.length - 1 ? prev + 1 : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlighted(prev => (prev > 0 ? prev - 1 : allFiltered.length - 1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (highlighted >= 0 && allFiltered[highlighted]) {
+        onChange(allFiltered[highlighted].code)
+        setOpen(false)
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setOpen(false)
+    }
+  }
+
+  const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      setOpen(true)
+    }
+  }
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        onKeyDown={handleTriggerKeyDown}
+        className="flex w-full items-center justify-between rounded-lg border border-burl-gray-200 bg-white px-3.5 py-[13px] text-left text-[1rem] transition-colors hover:bg-warm-gray sm:text-[0.875rem]"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+      >
+        {selected ? (
+          <span className="flex items-center gap-2.5">
+            <span className="text-base leading-none">{countryFlag(selected.code)}</span>
+            <span className="text-burl-gray-700">{selected.name}</span>
+          </span>
+        ) : (
+          <span className="text-burl-gray-400">{placeholder}</span>
+        )}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-burl-gray-400">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-burl-gray-200 bg-white shadow-lg">
+          <div className="border-b border-burl-gray-100 px-3 py-2">
+            <input
+              ref={searchRef}
+              type="text"
+              className="w-full bg-transparent text-[1rem] text-burl-gray-700 outline-none placeholder:text-burl-gray-300 sm:text-[0.8125rem]"
+              placeholder="Search countries..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onKeyDown={handleKeyDown}
+              aria-activedescendant={highlighted >= 0 ? `country-opt-${allFiltered[highlighted]?.code}` : undefined}
+            />
+          </div>
+          <ul ref={listRef} role="listbox" className="max-h-60 overflow-y-auto py-1">
+            {filteredPriority.map((c, i) => (
+              <li key={c.code}>
+                <button
+                  type="button"
+                  role="option"
+                  id={`country-opt-${c.code}`}
+                  aria-selected={value === c.code}
+                  className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-warm-gray ${highlighted === i ? 'bg-warm-gray text-burl-gray-700' : value === c.code ? 'bg-warm-gray font-medium text-burl-gray-700' : 'text-burl-gray-500'}`}
+                  onClick={() => { onChange(c.code); setOpen(false) }}
+                  onMouseEnter={() => setHighlighted(i)}
+                >
+                  <span className="text-base leading-none">{countryFlag(c.code)}</span>
+                  <span>{c.name}</span>
+                </button>
+              </li>
+            ))}
+            {filteredPriority.length > 0 && filteredRest.length > 0 && (
+              <li className="my-1 border-t border-burl-gray-100" />
+            )}
+            {filteredRest.map((c, i) => {
+              const idx = filteredPriority.length + i
+              return (
+                <li key={c.code}>
+                  <button
+                    type="button"
+                    role="option"
+                    id={`country-opt-${c.code}`}
+                    aria-selected={value === c.code}
+                    className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-warm-gray ${highlighted === idx ? 'bg-warm-gray text-burl-gray-700' : value === c.code ? 'bg-warm-gray font-medium text-burl-gray-700' : 'text-burl-gray-500'}`}
+                    onClick={() => { onChange(c.code); setOpen(false) }}
+                    onMouseEnter={() => setHighlighted(idx)}
+                  >
+                    <span className="text-base leading-none">{countryFlag(c.code)}</span>
+                    <span>{c.name}</span>
+                  </button>
+                </li>
+              )
+            })}
+            {allFiltered.length === 0 && (
+              <li className="px-3 py-3 text-center text-[0.8125rem] text-burl-gray-400">No countries found</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PhoneInput({
+  countryCode,
+  onCountryChange,
+  phone,
+  onPhoneChange,
+}: {
+  countryCode: string
+  onCountryChange: (code: string) => void
+  phone: string
+  onPhoneChange: (val: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [highlighted, setHighlighted] = useState(-1)
+  const ref = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    if (open) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [open])
+
+  useEffect(() => {
+    if (open) {
+      searchRef.current?.focus()
+      setHighlighted(-1)
+    } else {
+      setSearch('')
+    }
+  }, [open])
+
+  useEffect(() => {
+    setHighlighted(-1)
+  }, [search])
+
+  useEffect(() => {
+    if (highlighted >= 0 && listRef.current) {
+      const items = listRef.current.querySelectorAll('[role="option"]')
+      items[highlighted]?.scrollIntoView({ block: 'nearest' })
+    }
+  }, [highlighted])
+
+  const dial = getDialCode(countryCode)
+  const priority = PRIORITY_COUNTRIES.map(code => DIAL_CODES.find(c => c.code === code)!).filter(Boolean)
+  const rest = DIAL_CODES.filter(c => !PRIORITY_COUNTRIES.includes(c.code))
+
+  const filterCodes = (list: typeof DIAL_CODES) =>
+    search ? list.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.dial.includes(search)) : list
+
+  const filteredPriority = filterCodes(priority)
+  const filteredRest = filterCodes(rest)
+  const allFiltered = [...filteredPriority, ...filteredRest]
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlighted(prev => (prev < allFiltered.length - 1 ? prev + 1 : 0))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlighted(prev => (prev > 0 ? prev - 1 : allFiltered.length - 1))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      if (highlighted >= 0 && allFiltered[highlighted]) {
+        onCountryChange(allFiltered[highlighted].code)
+        setOpen(false)
+      }
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      setOpen(false)
+    }
+  }
+
+  const handleTriggerKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      setOpen(true)
+    }
+  }
+
+  return (
+    <div className="flex items-stretch" ref={ref}>
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          onKeyDown={handleTriggerKeyDown}
+          className="flex h-full items-center gap-1 rounded-l-lg border border-r-0 border-burl-gray-200 bg-white px-2.5 text-[0.875rem] transition-colors hover:bg-warm-gray"
+          aria-label="Select country code"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+        >
+          <span className="text-base leading-none">{countryCode ? countryFlag(countryCode) : '🌐'}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-burl-gray-400">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {open && (
+          <div className="absolute left-0 top-full z-50 mt-1 w-64 overflow-hidden rounded-lg border border-burl-gray-200 bg-white shadow-lg">
+            <div className="border-b border-burl-gray-100 px-3 py-2">
+              <input
+                ref={searchRef}
+                type="text"
+                className="w-full bg-transparent text-[1rem] text-burl-gray-700 outline-none placeholder:text-burl-gray-300 sm:text-[0.8125rem]"
+                placeholder="Search..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                onKeyDown={handleKeyDown}
+                aria-activedescendant={highlighted >= 0 ? `dial-opt-${allFiltered[highlighted]?.code}` : undefined}
+              />
+            </div>
+            <ul ref={listRef} role="listbox" className="max-h-60 overflow-y-auto py-1">
+              {filteredPriority.map((c, i) => (
+                <li key={c.code}>
+                  <button
+                    type="button"
+                    role="option"
+                    id={`dial-opt-${c.code}`}
+                    aria-selected={countryCode === c.code}
+                    className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-warm-gray ${highlighted === i ? 'bg-warm-gray text-burl-gray-700' : countryCode === c.code ? 'bg-warm-gray font-medium text-burl-gray-700' : 'text-burl-gray-500'}`}
+                    onClick={() => { onCountryChange(c.code); setOpen(false) }}
+                    onMouseEnter={() => setHighlighted(i)}
+                  >
+                    <span className="text-base leading-none">{countryFlag(c.code)}</span>
+                    <span className="text-burl-gray-400">{c.dial}</span>
+                    <span>{c.name}</span>
+                  </button>
+                </li>
+              ))}
+              {filteredPriority.length > 0 && filteredRest.length > 0 && (
+                <li className="my-1 border-t border-burl-gray-100" />
+              )}
+              {filteredRest.map((c, i) => {
+                const idx = filteredPriority.length + i
+                return (
+                  <li key={c.code}>
+                    <button
+                      type="button"
+                      role="option"
+                      id={`dial-opt-${c.code}`}
+                      aria-selected={countryCode === c.code}
+                      className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-[0.8125rem] transition-colors hover:bg-warm-gray ${highlighted === idx ? 'bg-warm-gray text-burl-gray-700' : countryCode === c.code ? 'bg-warm-gray font-medium text-burl-gray-700' : 'text-burl-gray-500'}`}
+                      onClick={() => { onCountryChange(c.code); setOpen(false) }}
+                      onMouseEnter={() => setHighlighted(idx)}
+                    >
+                      <span className="text-base leading-none">{countryFlag(c.code)}</span>
+                      <span className="text-burl-gray-400">{c.dial}</span>
+                      <span>{c.name}</span>
+                    </button>
+                  </li>
+                )
+              })}
+              {allFiltered.length === 0 && (
+                <li className="px-3 py-3 text-center text-[0.8125rem] text-burl-gray-400">No results</li>
+              )}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      {dial && (
+        <span className="flex items-center border-y border-burl-gray-200 bg-white px-2 text-[0.8125rem] text-burl-gray-400">
+          {dial}
+        </span>
+      )}
+
+      <input
+        id="apply-phone"
+        className="auth-field-input flex-1 rounded-l-none border-l-0"
+        type="tel"
+        autoComplete="tel-national"
+        placeholder={getPhonePlaceholder(countryCode)}
+        value={phone}
+        onChange={e => onPhoneChange(e.target.value)}
+      />
+    </div>
+  )
+}
+
+function getPhonePlaceholder(countryCode: string): string {
+  const placeholders: Record<string, string> = {
+    NG: '803 000 0000',
+    GH: '24 000 0000',
+    KE: '712 000000',
+    ZA: '71 000 0000',
+    US: '(201) 555-0123',
+    GB: '7911 123456',
+    CA: '(204) 555-0123',
+    IN: '98765 43210',
+  }
+  return placeholders[countryCode] || 'Enter your number'
 }
 
 const COUNTRIES = [

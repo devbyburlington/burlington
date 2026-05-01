@@ -1,25 +1,67 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@burlington/shared/src/supabase/client'
+import { ndaSignatureSchema } from '../../lib/schemas/auth'
 import { getMarketingUrl, MARKETING_URL_FALLBACK } from '../../lib/utils/marketing-url'
 import { AuthBackLink } from './AuthBackLink'
 import { AuthWordmark } from './AuthWordmark'
 import { AuthFooter } from './AuthFooter'
 
 export function NdaForm() {
+  const router = useRouter()
   const [signature, setSignature] = useState('')
   const [hasScrolled, setHasScrolled] = useState(false)
   const [signed, setSigned] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [backUrl, setBackUrl] = useState(MARKETING_URL_FALLBACK)
+  const [isLoading, setIsLoading] = useState(true)
+  const [applicantName, setApplicantName] = useState('Applicant')
+  const [givenName, setGivenName] = useState('')
+  const [familyName, setFamilyName] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setBackUrl(getMarketingUrl())
   }, [])
 
-  const applicantName = 'Applicant'
+  useEffect(() => {
+    async function fetchName() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.replace('/apply')
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, given_name, family_name, field_industry, nda_signed_at')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.field_industry) {
+        router.replace('/apply')
+        return
+      }
+
+      if (profile.nda_signed_at) {
+        router.replace('/status')
+        return
+      }
+
+      if (profile.full_name) {
+        setApplicantName(profile.full_name)
+      }
+      if (profile.given_name) setGivenName(profile.given_name)
+      if (profile.family_name) setFamilyName(profile.family_name)
+      setIsLoading(false)
+    }
+    fetchName()
+  }, [])
+
   const today = new Date().toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'long',
@@ -29,15 +71,22 @@ export function NdaForm() {
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    const handleScroll = () => {
+
+    const checkScroll = () => {
+      if (el.scrollHeight <= el.clientHeight) {
+        setHasScrolled(true)
+        return
+      }
       const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 40
       if (nearBottom) setHasScrolled(true)
     }
-    el.addEventListener('scroll', handleScroll)
-    return () => el.removeEventListener('scroll', handleScroll)
-  }, [])
 
-  const handleSign = (e: React.FormEvent) => {
+    checkScroll()
+    el.addEventListener('scroll', checkScroll)
+    return () => el.removeEventListener('scroll', checkScroll)
+  }, [isLoading])
+
+  const handleSign = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
@@ -46,18 +95,74 @@ export function NdaForm() {
       return
     }
 
-    if (!signature.trim()) {
-      setError('Type your full legal name to sign.')
+    const parsed = ndaSignatureSchema.safeParse({ signature })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0]?.message ?? 'Invalid signature')
       return
     }
 
-    if (signature.trim().split(/\s+/).length < 2) {
-      setError('Please enter your full name (first and last).')
-      return
+    const signedName = parsed.data.signature
+    const expectedName = givenName && familyName
+      ? `${givenName} ${familyName}`
+      : applicantName
+
+    if (expectedName && expectedName !== 'Applicant') {
+      if (signedName.toLowerCase() !== expectedName.toLowerCase()) {
+        setError(`Your signature must match your name on file: ${expectedName}`)
+        return
+      }
     }
 
-    setSigned(true)
-    // TODO: submit to Supabase, generate PDF, redirect to /status
+    setIsSubmitting(true)
+
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setError('You must be signed in to sign the agreement.')
+        setIsSubmitting(false)
+        return
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          nda_signed_at: new Date().toISOString(),
+          nda_signature_name: signedName,
+          nda_signature_ip: null,
+          nda_signature_ua: navigator.userAgent,
+        })
+        .eq('id', user.id)
+
+      if (updateError) {
+        console.error('[NdaForm] Failed to record signature — code:', updateError.code, 'message:', updateError.message, 'hint:', updateError.hint, 'details:', updateError.details)
+        setError('Something went wrong. Please try again.')
+        setIsSubmitting(false)
+        return
+      }
+
+      setSigned(true)
+    } catch {
+      setError('Connection lost. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <main className="auth-form-panel">
+        <div className="auth-form-top">
+          <AuthBackLink href="/apply" label="Back to application" />
+          <AuthWordmark />
+        </div>
+        <div className="auth-form-wrap">
+          <NdaSkeleton />
+        </div>
+        <AuthFooter />
+      </main>
+    )
   }
 
   if (signed) {
@@ -98,28 +203,17 @@ export function NdaForm() {
             <b>What happens next</b> &middot; Our team will review your application within 48 hours. You can check your application status at any time.
           </div>
 
-          <div className="mt-8 flex flex-col gap-3">
-            <Link href="/status" className="auth-btn-primary justify-center">
+          <div className="mt-8">
+            <button
+              type="button"
+              className="auth-btn-primary justify-center"
+              onClick={() => router.push('/status')}
+            >
               View application status
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
-            </Link>
-
-            <button
-              type="button"
-              className="auth-btn-sso"
-              onClick={() => {
-                // TODO: download signed PDF from Supabase Storage
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download signed copy
             </button>
           </div>
         </div>
@@ -188,12 +282,15 @@ export function NdaForm() {
 
           <button
             type="submit"
-            className={`auth-btn-primary ${!hasScrolled ? 'cursor-not-allowed opacity-50' : ''}`}
+            disabled={isSubmitting || !hasScrolled}
+            className={`auth-btn-primary ${!hasScrolled || isSubmitting ? 'cursor-not-allowed opacity-50' : ''}`}
           >
-            Sign agreement
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            {isSubmitting ? 'Signing...' : 'Sign agreement'}
+            {!isSubmitting && (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            )}
           </button>
         </form>
       </div>
@@ -289,5 +386,42 @@ function NdaContent({ applicantName, date }: { applicantName: string; date: stri
         The Parties agree that this Agreement may be executed electronically. Each Party acknowledges that their electronic signature shall have the same legal effect as a handwritten signature. The electronic execution record, including the signatory&rsquo;s name, IP address, user agent, timestamp, and timezone, shall constitute sufficient evidence of signing.
       </p>
     </>
+  )
+}
+
+function NdaSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-2 h-3 w-40 rounded bg-burl-gray-100" />
+      <div className="mb-3 h-7 w-48 rounded bg-burl-gray-100" />
+      <div className="mb-2 h-4 w-full rounded bg-burl-gray-100" />
+      <div className="mb-6 h-4 w-4/5 rounded bg-burl-gray-100" />
+
+      <div className="mb-6 rounded-lg border border-burl-gray-200 bg-warm-gray/40 px-5 py-5">
+        <div className="mb-4 h-4 w-56 mx-auto rounded bg-burl-gray-100" />
+        <div className="mb-3 h-3 w-full rounded bg-burl-gray-100" />
+        <div className="mb-3 h-3 w-full rounded bg-burl-gray-100" />
+        <div className="mb-3 h-3 w-5/6 rounded bg-burl-gray-100" />
+        <div className="mb-5 h-3 w-3/4 rounded bg-burl-gray-100" />
+        <div className="mb-3 h-3 w-full rounded bg-burl-gray-100" />
+        <div className="mb-3 h-3 w-full rounded bg-burl-gray-100" />
+        <div className="mb-3 h-3 w-5/6 rounded bg-burl-gray-100" />
+        <div className="h-3 w-2/3 rounded bg-burl-gray-100" />
+      </div>
+
+      <div className="mb-6">
+        <div className="mb-2 h-3 w-32 rounded bg-burl-gray-100" />
+        <div className="h-12 w-full rounded-lg bg-burl-gray-100" />
+      </div>
+
+      <div className="mb-6 rounded-lg border border-burl-gray-200 bg-warm-gray/40 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="h-3 w-24 rounded bg-burl-gray-100" />
+          <div className="h-3 w-28 rounded bg-burl-gray-100" />
+        </div>
+      </div>
+
+      <div className="h-11 w-full rounded-lg bg-burl-gray-100" />
+    </div>
   )
 }

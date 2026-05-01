@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@burlington/shared/src/supabase/client'
 import { getMarketingUrl, MARKETING_URL_FALLBACK } from '../../lib/utils/marketing-url'
 import { AuthBackLink } from './AuthBackLink'
 import { AuthWordmark } from './AuthWordmark'
@@ -10,17 +12,52 @@ import { AuthFooter } from './AuthFooter'
 type ApplicationStatus = 'pending' | 'approved' | 'waitlisted' | 'rejected'
 
 export function StatusView() {
-  // TODO: fetch real status from Supabase
-  const status = 'pending' as ApplicationStatus
-  const appliedAt = new Date().toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const router = useRouter()
+  const [status, setStatus] = useState<ApplicationStatus | null>(null)
+  const [appliedAt, setAppliedAt] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
   const [backUrl, setBackUrl] = useState(MARKETING_URL_FALLBACK)
 
   useEffect(() => {
     setBackUrl(getMarketingUrl())
+  }, [])
+
+  useEffect(() => {
+    async function fetchStatus() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        setIsLoading(false)
+        return
+      }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('status, created_at, field_industry, nda_signed_at, onboarded_at')
+        .eq('id', user.id)
+        .single()
+
+      if (profile) {
+        if (profile.field_industry && !profile.nda_signed_at) {
+          router.replace('/nda')
+          return
+        }
+
+        if (profile.status === 'approved' && profile.onboarded_at) {
+          router.replace('/dashboard')
+          return
+        }
+
+        setStatus(profile.status as ApplicationStatus)
+        setAppliedAt(new Date(profile.created_at).toLocaleDateString('en-GB', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }))
+      }
+      setIsLoading(false)
+    }
+    fetchStatus()
   }, [])
 
   return (
@@ -31,10 +68,18 @@ export function StatusView() {
       </div>
 
       <div className="auth-form-wrap">
-        {status === 'pending' && <PendingState appliedAt={appliedAt} />}
-        {status === 'approved' && <ApprovedState />}
-        {status === 'waitlisted' && <WaitlistedState />}
-        {status === 'rejected' && <RejectedState />}
+        {isLoading ? (
+          <StatusSkeleton />
+        ) : status ? (
+          <>
+            {status === 'pending' && <PendingState appliedAt={appliedAt} />}
+            {status === 'approved' && <ApprovedState />}
+            {status === 'waitlisted' && <WaitlistedState />}
+            {status === 'rejected' && <RejectedState />}
+          </>
+        ) : (
+          <PendingState appliedAt={appliedAt || new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })} />
+        )}
       </div>
 
       <AuthFooter />
@@ -86,9 +131,7 @@ function PendingState({ appliedAt }: { appliedAt: string }) {
       </div>
 
       <div className="mt-8">
-        <Link href="/login" className="auth-btn-sso justify-center">
-          Return to sign in
-        </Link>
+        <SignOutLink />
       </div>
     </>
   )
@@ -121,14 +164,15 @@ function ApprovedState() {
         </div>
       </div>
 
-      <div className="mt-8">
-        <Link href="/login" className="auth-btn-primary justify-center">
-          Sign in to get started
+      <div className="mt-8 flex flex-col gap-3">
+        <Link href="/welcome" className="auth-btn-primary justify-center">
+          Get started
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
           </svg>
         </Link>
+        <SignOutLink />
       </div>
     </>
   )
@@ -168,9 +212,7 @@ function WaitlistedState() {
       </div>
 
       <div className="mt-8">
-        <Link href="/login" className="auth-btn-sso justify-center">
-          Return to sign in
-        </Link>
+        <SignOutLink />
       </div>
     </>
   )
@@ -243,10 +285,53 @@ function RejectedState() {
             <polyline points="12 5 19 12 12 19" />
           </svg>
         </Link>
-        <Link href="/login" className="auth-btn-sso justify-center">
-          Return to sign in
-        </Link>
+        <SignOutLink />
       </div>
     </>
+  )
+}
+
+function SignOutLink() {
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    await fetch('/api/set-persist', { method: 'DELETE' })
+    router.replace('/login')
+    router.refresh()
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleSignOut}
+      className="auth-btn-sso justify-center"
+    >
+      Sign out
+    </button>
+  )
+}
+
+function StatusSkeleton() {
+  return (
+    <div className="animate-pulse">
+      <div className="mb-8 h-14 w-14 rounded-2xl bg-burl-gray-100" />
+      <div className="mb-3 h-7 w-3/4 rounded bg-burl-gray-100" />
+      <div className="mb-2 h-4 w-full rounded bg-burl-gray-100" />
+      <div className="mb-6 h-4 w-5/6 rounded bg-burl-gray-100" />
+      <div className="mb-8 rounded-lg border border-burl-gray-200 bg-warm-gray/40 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="h-3 w-16 rounded bg-burl-gray-100" />
+          <div className="h-3 w-24 rounded bg-burl-gray-100" />
+        </div>
+        <div className="mt-3 flex items-center justify-between">
+          <div className="h-3 w-12 rounded bg-burl-gray-100" />
+          <div className="h-3 w-20 rounded bg-burl-gray-100" />
+        </div>
+      </div>
+      <div className="h-4 w-full rounded bg-burl-gray-100" />
+      <div className="mt-8 h-11 w-full rounded-lg bg-burl-gray-100" />
+    </div>
   )
 }

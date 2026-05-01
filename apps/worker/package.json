@@ -2,6 +2,7 @@
   "name": "@burlington/worker",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
@@ -9,7 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@burlington/shared": "workspace:*"
+    "@burlington/shared": "workspace:*",
+    "@sentry/node": "^10.51.0"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -1,0 +1,21 @@
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+
+[db]
+port = 54322
+
+[auth]
+enabled = true
+site_url = "http://localhost:4001"
+additional_redirect_urls = [
+  "http://localhost:4001",
+  "http://localhost:4002",
+  "https://app.burlingtonconsult.com",
+  "https://admin.burlingtonconsult.com",
+]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true

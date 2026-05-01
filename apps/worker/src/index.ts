@@ -1,4 +1,5 @@
-import { startHealthServer } from './health/server'
+import './sentry.js'
+import { startHealthServer } from './health/server.js'
 
 console.info('[worker] Starting Burlington worker')
 

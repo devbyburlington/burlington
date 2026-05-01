@@ -9,7 +9,7 @@ export function TeamGrid() {
       <div className="mx-auto max-w-[1200px]">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {TEAM.map((member, i) => (
-            <FadeIn key={member.slug} delay={i * 100}>
+            <FadeIn key={member.slug} delay={i * 100} className="h-full">
             <Link href={`/team/${member.slug}`} className="team-card">
               <div className="team-card-photo">
                 {member.photo ? (
@@ -17,7 +17,8 @@ export function TeamGrid() {
                     src={member.photo}
                     alt={member.name}
                     fill
-                    className="object-cover"
+                    className={`object-cover${member.grayscale ? ' grayscale' : ''}`}
+                    style={member.photoPosition ? { objectPosition: member.photoPosition.replace('_', ' ').replace('center top', 'center 20%') } : undefined}
                   />
                 ) : (
                   <div className="team-card-avatar">

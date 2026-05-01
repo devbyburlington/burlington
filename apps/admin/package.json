@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@burlington/design-tokens": "workspace:*",
+    "@burlington/shared": "workspace:*",
     "@burlington/tailwind-config": "workspace:*",
     "@burlington/ui": "workspace:*",
-    "@burlington/shared": "workspace:*",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.105.1",
     "next": "^15",
     "react": "^19",
     "react-dom": "^19"
