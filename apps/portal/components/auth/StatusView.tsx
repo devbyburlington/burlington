@@ -49,7 +49,7 @@ export function StatusView() {
         }
 
         setStatus(profile.status as ApplicationStatus)
-        setAppliedAt(new Date(profile.created_at).toLocaleDateString('en-GB', {
+        setAppliedAt(new Date(profile.created_at ?? Date.now()).toLocaleDateString('en-GB', {
           day: 'numeric',
           month: 'long',
           year: 'numeric',
